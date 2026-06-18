@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { US_TIMEZONE_VALUES } from "./timezones";
 
 export const signupSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -20,6 +21,14 @@ export const messageSchema = z.object({
     .max(280, "Keep it under 280 characters"),
 });
 
+export const settingsSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  timezone: z.enum(US_TIMEZONE_VALUES as [string, ...string[]], {
+    message: "Choose a valid US timezone",
+  }),
+});
+
+export type SettingsInput = z.infer<typeof settingsSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type ContactInput = z.infer<typeof contactSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;

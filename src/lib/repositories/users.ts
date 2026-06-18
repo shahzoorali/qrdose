@@ -107,3 +107,56 @@ export async function updateCardId(
     })
   );
 }
+
+export async function updateUserSettings(
+  userId: string,
+  settings: { name: string; timezone: string }
+): Promise<void> {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: "SET #n = :n, #tz = :tz",
+      ExpressionAttributeNames: { "#n": "name", "#tz": "timezone" },
+      ExpressionAttributeValues: {
+        ":n": settings.name,
+        ":tz": settings.timezone,
+      },
+    })
+  );
+}
+
+export async function updatePassword(
+  userId: string,
+  passwordHash: string
+): Promise<void> {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: "SET passwordHash = :p",
+      ExpressionAttributeValues: { ":p": passwordHash },
+    })
+  );
+}
+
+/** Persist Stripe customer id + subscription status from billing events. */
+export async function updateSubscription(
+  userId: string,
+  data: { stripeCustomerId?: string; subscriptionStatus: string }
+): Promise<void> {
+  const sets = ["subscriptionStatus = :s"];
+  const values: Record<string, unknown> = { ":s": data.subscriptionStatus };
+  if (data.stripeCustomerId) {
+    sets.push("stripeCustomerId = :c");
+    values[":c"] = data.stripeCustomerId;
+  }
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: `SET ${sets.join(", ")}`,
+      ExpressionAttributeValues: values,
+    })
+  );
+}

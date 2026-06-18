@@ -15,7 +15,7 @@ export default async function HistoryPage() {
     new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
-      timeZone: user.timezone || "America/New_York",
+      timeZone: user.timezone || "America/Chicago",
     }).format(new Date(iso));
 
   return (

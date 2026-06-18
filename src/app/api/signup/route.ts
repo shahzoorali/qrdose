@@ -5,11 +5,17 @@ import { normalizeUsPhone } from "@/lib/phone";
 import { newUserId, newCardId } from "@/lib/ids";
 import { createUser, getUserByEmail } from "@/lib/repositories/users";
 import { putCardMapping } from "@/lib/repositories/cards";
+import { DEFAULT_TIMEZONE } from "@/lib/env";
+import { rateLimit, clientIp, tooManyResponse } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // Limit signups per IP to curb automated abuse.
+  const rl = await rateLimit(`signup:${clientIp(req)}`, 5, 3600);
+  if (!rl.allowed) return tooManyResponse(rl.retryAfter);
+
   const body = await req.json().catch(() => null);
   const parsed = signupSchema.safeParse(body);
   if (!parsed.success) {
@@ -47,8 +53,9 @@ export async function POST(req: Request) {
     phone: phoneE164,
     notificationMessage: `${name} has taken their medication`,
     cardId,
-    timezone: "America/New_York",
+    timezone: DEFAULT_TIMEZONE,
     createdAt: new Date().toISOString(),
+    subscriptionStatus: "none",
   };
 
   await createUser(user);

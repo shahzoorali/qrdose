@@ -25,3 +25,24 @@ export const TRIGGER_COOLDOWN_SECONDS = Number(
 
 /** Max contacts a user may configure (per product spec). */
 export const MAX_CONTACTS = 10;
+
+/** Default timezone for new accounts (US central). */
+export const DEFAULT_TIMEZONE = "America/Chicago";
+
+// ── Stripe (billing) ────────────────────────────────────────────────
+// Billing is pre-wired but stays fully disabled until these are set.
+export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+export const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || "";
+
+/** True only when Stripe is fully configured. When false, billing is a
+ *  no-op and subscription gating is disabled so the app runs unrestricted. */
+export const STRIPE_ENABLED = Boolean(
+  STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET && STRIPE_PRICE_ID
+);
+
+// ── Password reset (SMS OTP) ────────────────────────────────────────
+export const RESET_CODE_TTL_SECONDS = Number(
+  process.env.RESET_CODE_TTL_SECONDS || "900" // 15 minutes
+);
+export const RESET_MAX_ATTEMPTS = 5;

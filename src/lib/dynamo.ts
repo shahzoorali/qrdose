@@ -29,3 +29,8 @@ export const skTrigger = (iso: string) => `TRIGGER#${iso}`;
 export const pkCard = (cardId: string) => `CARD#${cardId}`;
 export const skCard = () => "CARD";
 export const gsi1Email = (email: string) => `EMAIL#${email.toLowerCase()}`;
+// Password-reset code item (one per user, overwritten on re-request).
+export const skReset = () => "RESET";
+// Rate-limit counter items (TTL-expired). Bucket identifies the action+subject.
+export const pkRate = (bucket: string) => `RATE#${bucket}`;
+export const skRateWindow = (windowId: number) => `W#${windowId}`;

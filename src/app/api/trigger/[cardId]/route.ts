@@ -4,7 +4,9 @@ import { getUserById } from "@/lib/repositories/users";
 import { listContacts } from "@/lib/repositories/contacts";
 import { lastTriggerAt, recordTrigger } from "@/lib/repositories/history";
 import { sendSms } from "@/lib/sns";
-import { TRIGGER_COOLDOWN_SECONDS } from "@/lib/env";
+import { TRIGGER_COOLDOWN_SECONDS, STRIPE_ENABLED } from "@/lib/env";
+import { rateLimit, clientIp, tooManyResponse } from "@/lib/rate-limit";
+import { hasActiveSubscription } from "@/lib/billing";
 import type { TriggerLog } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -14,16 +16,20 @@ function formatMessage(base: string, timezone: string, when: Date): string {
   const time = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: timezone || "America/New_York",
+    timeZone: timezone || "America/Chicago",
   }).format(when);
   return `${base} at ${time}.`;
 }
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ cardId: string }> }
 ) {
   const { cardId } = await params;
+
+  // Per-IP burst protection (the per-card cooldown below handles repeat taps).
+  const rl = await rateLimit(`trigger:${clientIp(req)}`, 20, 60);
+  if (!rl.allowed) return tooManyResponse(rl.retryAfter);
 
   const userId = await resolveCard(cardId);
   if (!userId) {
@@ -33,6 +39,14 @@ export async function POST(
   const user = await getUserById(userId);
   if (!user) {
     return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  }
+
+  // When Stripe is live, require an active subscription to send.
+  if (STRIPE_ENABLED && !hasActiveSubscription(user)) {
+    return NextResponse.json(
+      { error: "This card's subscription is inactive." },
+      { status: 402 }
+    );
   }
 
   // Cooldown: prevent accidental/abusive repeat taps.

@@ -1,3 +1,10 @@
+export type SubscriptionStatus =
+  | "none"
+  | "active"
+  | "trialing"
+  | "past_due"
+  | "canceled";
+
 export interface User {
   userId: string;
   email: string;
@@ -6,8 +13,11 @@ export interface User {
   phone: string; // E.164
   notificationMessage: string;
   cardId: string;
-  timezone: string; // IANA, e.g. America/New_York
+  timezone: string; // IANA, e.g. America/Chicago
   createdAt: string; // ISO
+  // Billing (Stripe). Optional so existing records remain valid.
+  stripeCustomerId?: string;
+  subscriptionStatus?: SubscriptionStatus;
 }
 
 export interface Contact {

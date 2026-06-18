@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "crypto";
+import { randomBytes, randomInt, randomUUID } from "crypto";
 
 const BASE62 =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -24,4 +24,9 @@ export function newContactId(): string {
 /** Card id is the secret embedded in the QR code and NFC card URL. */
 export function newCardId(): string {
   return base62Token(16);
+}
+
+/** 6-digit numeric one-time code for SMS password reset. */
+export function sixDigitCode(): string {
+  return randomInt(0, 1_000_000).toString().padStart(6, "0");
 }

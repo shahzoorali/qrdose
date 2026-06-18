@@ -59,6 +59,11 @@ scripts/create-table.ts       one-time DynamoDB provisioning
    AUTH_SECRET=                   # openssl rand -base64 32
    AUTH_TRUST_HOST=true
    TRIGGER_COOLDOWN_SECONDS=60
+   RESET_CODE_TTL_SECONDS=900
+   # Stripe — leave blank until ready (billing stays disabled):
+   STRIPE_SECRET_KEY=
+   STRIPE_WEBHOOK_SECRET=
+   STRIPE_PRICE_ID=
    ```
 
 3. **Create the DynamoDB table** (once, against AWS us-east-1):
@@ -84,7 +89,54 @@ scripts/create-table.ts       one-time DynamoDB provisioning
 3. **SNS (us-east-1)** — a production SMS account is already in place, so SMS
    can be sent to any valid US number. Confirm the monthly SMS spend limit and,
    if desired, set `SNS_SENDER_ID` to a registered origination number / sender
-   ID for delivery to US (+1) numbers.
+   ID for delivery to US (+1) numbers. SNS sends both the trigger notifications
+   and the password-reset codes.
+4. **DynamoDB TTL** — `npm run create-table` also enables TTL on the `ttl`
+   attribute (auto-expires rate-limit counters and password-reset codes).
+
+## Billing (Stripe) — enable when ready
+
+Billing is fully pre-wired but **disabled until all three Stripe env vars are
+set**. While disabled, the billing page shows "coming soon" and no subscription
+is required to use the app.
+
+To turn it on:
+
+1. Create a recurring **Price** in Stripe and copy its id → `STRIPE_PRICE_ID`.
+2. Set `STRIPE_SECRET_KEY` (from the Stripe dashboard).
+3. Add a webhook endpoint pointing at `https://<your-domain>/api/stripe/webhook`
+   for events `checkout.session.completed`, `customer.subscription.updated`,
+   `customer.subscription.deleted`; copy its signing secret → `STRIPE_WEBHOOK_SECRET`.
+
+Once set, the billing page shows a **Subscribe** button (Stripe Checkout), the
+webhook syncs `subscriptionStatus` onto the user, and the trigger endpoint
+requires an active subscription. No code changes needed.
+
+## Password reset
+
+Passwordless reset over SMS: a user requests a code by email, QRdose texts a
+6-digit code to the phone on the account (via SNS), and the code is verified to
+set a new password. Codes are single-active, hashed, expire after
+`RESET_CODE_TTL_SECONDS`, allow 5 attempts, and auto-purge via DynamoDB TTL.
+
+## Rate limiting
+
+A DynamoDB-backed fixed-window limiter protects `signup`, `forgot-password`,
+`reset-password`, and the public `trigger` endpoint (per IP). It fails open so
+infra issues never block legitimate use; the per-card cooldown still guards
+repeat taps.
+
+## Deployment
+
+The app builds as a self-contained server (`output: "standalone"`).
+
+- **AWS Amplify Hosting** — use `amplify.yml`; set all env vars in the Amplify
+  console.
+- **AWS ECS / Fargate (or any container host)** — build the included
+  `Dockerfile` (`docker build -t qrdose .`), push to ECR, run with the env vars
+  set on the task definition. Container listens on port 3000.
+
+Set `APP_BASE_URL` and `AUTH_TRUST_HOST=true` for the deployed domain.
 
 ## How the trigger works
 
