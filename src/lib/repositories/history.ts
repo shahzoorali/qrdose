@@ -30,12 +30,12 @@ export async function listTriggers(
       {
         timestamp: new Date(Date.now() - 3600000).toISOString(),
         recipientCount: 2,
-        status: "success",
+        status: "sent",
       },
       {
         timestamp: new Date(Date.now() - 7200000).toISOString(),
         recipientCount: 2,
-        status: "success",
+        status: "sent",
       },
     ];
   }
