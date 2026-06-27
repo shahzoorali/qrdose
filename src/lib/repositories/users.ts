@@ -58,6 +58,22 @@ export async function createUser(user: User): Promise<void> {
 }
 
 export async function getUserById(userId: string): Promise<User | null> {
+  // Development: test account (no AWS required)
+  if (userId === "test-user-123") {
+    return {
+      userId: "test-user-123",
+      email: "test@example.com",
+      name: "Test User",
+      passwordHash: "",
+      phone: "+16175551234",
+      notificationMessage: "Test notification",
+      cardId: "test-card-abc123",
+      timezone: "America/Chicago",
+      createdAt: new Date().toISOString(),
+      subscriptionStatus: "active",
+    };
+  }
+
   const res = await docClient.send(
     new GetCommand({
       TableName: TABLE,

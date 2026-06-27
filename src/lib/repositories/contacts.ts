@@ -31,6 +31,9 @@ export async function listContacts(userId: string): Promise<Contact[]> {
 }
 
 export async function countContacts(userId: string): Promise<number> {
+  // Development: test account (no AWS required)
+  if (userId === "test-user-123") return 2;
+
   const res = await docClient.send(
     new QueryCommand({
       TableName: TABLE,

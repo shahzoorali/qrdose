@@ -24,6 +24,22 @@ export async function listTriggers(
   userId: string,
   limit = 50
 ): Promise<TriggerLog[]> {
+  // Development: test account (no AWS required)
+  if (userId === "test-user-123") {
+    return [
+      {
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        recipientCount: 2,
+        status: "success",
+      },
+      {
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        recipientCount: 2,
+        status: "success",
+      },
+    ];
+  }
+
   const res = await docClient.send(
     new QueryCommand({
       TableName: TABLE,

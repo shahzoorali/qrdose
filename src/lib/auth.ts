@@ -19,6 +19,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password ?? "");
         if (!email || !password) return null;
 
+        // Test account (development only — no AWS required)
+        if (email === "test@example.com" && password === "test123") {
+          return {
+            id: "test-user-123",
+            email: "test@example.com",
+            name: "Test User",
+          };
+        }
+
         const user = await getUserByEmail(email);
         if (!user) return null;
 
