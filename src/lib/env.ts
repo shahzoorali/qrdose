@@ -14,7 +14,9 @@ export function requireEnv(name: string): string {
   return value;
 }
 
-export const AWS_REGION = process.env.AWS_REGION || "us-east-1";
+export const AWS_REGION = process.env.APP_AWS_REGION || process.env.AWS_REGION || "us-east-1";
+export const AWS_ACCESS_KEY_ID = process.env.APP_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID || "";
+export const AWS_SECRET_ACCESS_KEY = process.env.APP_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY || "";
 export const DYNAMODB_TABLE = process.env.DYNAMODB_TABLE || "QRdose";
 export const SNS_SENDER_ID = process.env.SNS_SENDER_ID || "";
 export const APP_BASE_URL =

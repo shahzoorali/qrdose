@@ -1,13 +1,17 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { AWS_REGION, DYNAMODB_TABLE } from "./env";
+import { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DYNAMODB_TABLE } from "./env";
 
 // Reuse a single client across hot reloads / lambda invocations.
 const globalForDynamo = globalThis as unknown as {
   __qrdoseDocClient?: DynamoDBDocumentClient;
 };
 
-const baseClient = new DynamoDBClient({ region: AWS_REGION });
+const clientConfig: ConstructorParameters<typeof DynamoDBClient>[0] = { region: AWS_REGION };
+if (AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY) {
+  clientConfig.credentials = { accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY };
+}
+const baseClient = new DynamoDBClient(clientConfig);
 
 export const docClient =
   globalForDynamo.__qrdoseDocClient ??
