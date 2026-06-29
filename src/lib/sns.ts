@@ -30,11 +30,21 @@ export async function sendSms(toE164: string, body: string): Promise<string> {
     },
   };
 
+  // SNS_SENDER_ID may be either a phone-number origination identity (E.164,
+  // e.g. "+14255554586") or an alphanumeric Sender ID (US doesn't support the
+  // latter). A phone number must be passed via OriginationNumber, not SenderID.
   if (SNS_SENDER_ID) {
-    attributes["AWS.SNS.SMS.SenderID"] = {
-      DataType: "String",
-      StringValue: SNS_SENDER_ID,
-    };
+    if (SNS_SENDER_ID.startsWith("+")) {
+      attributes["AWS.MM.SMS.OriginationNumber"] = {
+        DataType: "String",
+        StringValue: SNS_SENDER_ID,
+      };
+    } else {
+      attributes["AWS.SNS.SMS.SenderID"] = {
+        DataType: "String",
+        StringValue: SNS_SENDER_ID,
+      };
+    }
   }
 
   const result = await snsClient.send(
