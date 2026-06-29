@@ -79,6 +79,11 @@ export async function POST(
   const results = await Promise.allSettled(
     contacts.map((c) => sendSms(c.phone, body))
   );
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(`SMS send failed for ${contacts[i]?.phone}:`, r.reason);
+    }
+  });
   const successCount = results.filter((r) => r.status === "fulfilled").length;
 
   // Optional self-receipt to the account owner.
