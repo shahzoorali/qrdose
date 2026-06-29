@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentUserId } from "@/lib/session";
 import { settingsSchema } from "@/lib/validation";
-import { updateUserSettings } from "@/lib/repositories/users";
+import { updateUserSettings, getUserByEmail } from "@/lib/repositories/users";
+import { normalizeUsPhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,25 @@ export async function PUT(req: Request) {
     );
   }
 
-  await updateUserSettings(userId, parsed.data);
+  const { name, timezone, email } = parsed.data;
+
+  const phone = normalizeUsPhone(parsed.data.phone);
+  if (!phone) {
+    return NextResponse.json(
+      { error: "Enter a valid US phone number" },
+      { status: 400 }
+    );
+  }
+
+  // If the email is changing, make sure it isn't already taken by another user.
+  const existing = await getUserByEmail(email);
+  if (existing && existing.userId !== userId) {
+    return NextResponse.json(
+      { error: "An account with that email already exists" },
+      { status: 409 }
+    );
+  }
+
+  await updateUserSettings(userId, { name, timezone, phone, email });
   return NextResponse.json({ ok: true });
 }

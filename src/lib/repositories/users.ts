@@ -126,17 +126,27 @@ export async function updateCardId(
 
 export async function updateUserSettings(
   userId: string,
-  settings: { name: string; timezone: string }
+  settings: { name: string; timezone: string; phone: string; email: string }
 ): Promise<void> {
+  // Email is the GSI1 partition key, so changing it must also update GSI1PK.
   await docClient.send(
     new UpdateCommand({
       TableName: TABLE,
       Key: { PK: pkUser(userId), SK: skProfile() },
-      UpdateExpression: "SET #n = :n, #tz = :tz",
-      ExpressionAttributeNames: { "#n": "name", "#tz": "timezone" },
+      UpdateExpression:
+        "SET #n = :n, #tz = :tz, #ph = :ph, #em = :em, GSI1PK = :g1",
+      ExpressionAttributeNames: {
+        "#n": "name",
+        "#tz": "timezone",
+        "#ph": "phone",
+        "#em": "email",
+      },
       ExpressionAttributeValues: {
         ":n": settings.name,
         ":tz": settings.timezone,
+        ":ph": settings.phone,
+        ":em": settings.email,
+        ":g1": gsi1Email(settings.email),
       },
     })
   );

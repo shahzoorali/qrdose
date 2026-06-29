@@ -26,6 +26,8 @@ export const settingsSchema = z.object({
   timezone: z.enum(US_TIMEZONE_VALUES as [string, ...string[]], {
     message: "Choose a valid US timezone",
   }),
+  email: z.string().trim().toLowerCase().email("Enter a valid email"),
+  phone: z.string().trim().min(1, "Phone number is required"),
 });
 
 export type SettingsInput = z.infer<typeof settingsSchema>;
