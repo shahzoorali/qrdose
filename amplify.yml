@@ -12,7 +12,7 @@ frontend:
         # Amplify SSR (WEB_COMPUTE) does NOT pass branch env vars to the Lambda
         # runtime. Write the runtime-needed vars into .env.production so Next.js
         # bakes them into the server bundle at build time.
-        - env | grep -E '^(APP_AWS_ACCESS_KEY_ID|APP_AWS_SECRET_ACCESS_KEY|APP_AWS_REGION|DYNAMODB_TABLE|AUTH_SECRET|AUTH_TRUST_HOST|SNS_SENDER_ID|APP_BASE_URL|TRIGGER_COOLDOWN_SECONDS|RESET_CODE_TTL_SECONDS|STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET|STRIPE_PRICE_ID)=' >> .env.production
+        - env | grep -E '^(APP_AWS_ACCESS_KEY_ID|APP_AWS_SECRET_ACCESS_KEY|APP_AWS_REGION|DYNAMODB_TABLE|AUTH_SECRET|AUTH_TRUST_HOST|AUTH_URL|SNS_SENDER_ID|APP_BASE_URL|TRIGGER_COOLDOWN_SECONDS|RESET_CODE_TTL_SECONDS|STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET|STRIPE_PRICE_ID)=' >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next
