@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
 import { getUserByEmail } from "./repositories/users";
+import { isAccountDisabled } from "./types";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -33,6 +34,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
+
+        // Disabled accounts cannot log in.
+        if (isAccountDisabled(user)) return null;
 
         return { id: user.userId, email: user.email, name: user.name };
       },

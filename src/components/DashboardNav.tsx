@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
+const baseLinks = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/contacts", label: "Contacts" },
   { href: "/dashboard/message", label: "Message" },
@@ -13,8 +13,11 @@ const links = [
   { href: "/dashboard/settings", label: "Settings" },
 ];
 
-export function DashboardNav() {
+export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const links = isAdmin
+    ? [...baseLinks, { href: "/admin", label: "Admin" }]
+    : baseLinks;
   return (
     <nav className="flex gap-1 overflow-x-auto">
       {links.map((l) => {

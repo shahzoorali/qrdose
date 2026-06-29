@@ -3,6 +3,7 @@ import { Logo } from "@/components/Logo";
 import { DashboardNav } from "@/components/DashboardNav";
 import { SignOutButton } from "@/components/SignOutButton";
 import { currentUser } from "@/lib/session";
+import { isAccountDisabled } from "@/lib/types";
 
 export default async function DashboardLayout({
   children,
@@ -11,6 +12,8 @@ export default async function DashboardLayout({
 }) {
   const user = await currentUser();
   if (!user) redirect("/login");
+  // A disabled account with a still-valid session is bounced out.
+  if (isAccountDisabled(user)) redirect("/login");
 
   return (
     <div className="min-h-screen">
@@ -26,7 +29,7 @@ export default async function DashboardLayout({
             </div>
           </div>
           <div className="pb-3">
-            <DashboardNav />
+            <DashboardNav isAdmin={user.isAdmin === true} />
           </div>
         </div>
       </header>

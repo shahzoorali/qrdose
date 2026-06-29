@@ -1,7 +1,9 @@
 import {
+  BatchWriteCommand,
   GetCommand,
   PutCommand,
   QueryCommand,
+  ScanCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {
@@ -11,7 +13,8 @@ import {
   skProfile,
   gsi1Email,
 } from "../dynamo";
-import type { User } from "../types";
+import { deleteCardMapping } from "./cards";
+import type { AccountStatus, User } from "../types";
 
 interface UserItem extends User {
   PK: string;
@@ -185,4 +188,99 @@ export async function updateSubscription(
       ExpressionAttributeValues: values,
     })
   );
+}
+
+// ── Admin operations ────────────────────────────────────────────────
+
+/**
+ * List all user profiles. Scans the table filtering to SK = "PROFILE",
+ * which excludes contact/trigger/reset/card/rate items. Paginated via the
+ * returned `lastKey` (pass it back as `startKey` to continue).
+ */
+export async function listAllUsers(
+  limit = 100,
+  startKey?: Record<string, unknown>
+): Promise<{ users: User[]; lastKey?: Record<string, unknown> }> {
+  const res = await docClient.send(
+    new ScanCommand({
+      TableName: TABLE,
+      FilterExpression: "SK = :sk",
+      ExpressionAttributeValues: { ":sk": skProfile() },
+      Limit: limit,
+      ExclusiveStartKey: startKey,
+    })
+  );
+  const users = (res.Items ?? [])
+    .map(fromItem)
+    .filter((u): u is User => u !== null);
+  return { users, lastKey: res.LastEvaluatedKey };
+}
+
+export async function setAccountStatus(
+  userId: string,
+  status: AccountStatus
+): Promise<void> {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: "SET accountStatus = :s",
+      ExpressionAttributeValues: { ":s": status },
+    })
+  );
+}
+
+export async function setAdminFlag(
+  userId: string,
+  isAdmin: boolean
+): Promise<void> {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: "SET isAdmin = :a",
+      ExpressionAttributeValues: { ":a": isAdmin },
+    })
+  );
+}
+
+/**
+ * Hard-delete a user and all data under their partition (profile, contacts,
+ * triggers, reset code), plus their card mapping (a separate partition).
+ */
+export async function deleteUserCompletely(userId: string): Promise<void> {
+  const user = await getUserById(userId);
+
+  // Gather every item under PK = USER#<userId>.
+  const items: { PK: string; SK: string }[] = [];
+  let startKey: Record<string, unknown> | undefined;
+  do {
+    const res = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE,
+        KeyConditionExpression: "PK = :pk",
+        ExpressionAttributeValues: { ":pk": pkUser(userId) },
+        ProjectionExpression: "PK, SK",
+        ExclusiveStartKey: startKey,
+      })
+    );
+    for (const it of res.Items ?? []) {
+      items.push({ PK: (it as { PK: string }).PK, SK: (it as { SK: string }).SK });
+    }
+    startKey = res.LastEvaluatedKey;
+  } while (startKey);
+
+  // BatchWrite deletes in chunks of 25 (DynamoDB limit).
+  for (let i = 0; i < items.length; i += 25) {
+    const chunk = items.slice(i, i + 25);
+    await docClient.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [TABLE]: chunk.map((key) => ({ DeleteRequest: { Key: key } })),
+        },
+      })
+    );
+  }
+
+  if (user?.cardId) await deleteCardMapping(user.cardId);
 }

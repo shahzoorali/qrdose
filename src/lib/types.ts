@@ -18,6 +18,18 @@ export interface User {
   // Billing (Stripe). Optional so existing records remain valid.
   stripeCustomerId?: string;
   subscriptionStatus?: SubscriptionStatus;
+  // Admin & account control. Optional so existing records remain valid.
+  isAdmin?: boolean;
+  accountStatus?: AccountStatus; // undefined treated as "active"
+}
+
+export type AccountStatus = "active" | "disabled";
+
+/** A disabled account cannot log in or send notifications. */
+export function isAccountDisabled(
+  user: Pick<User, "accountStatus">
+): boolean {
+  return user.accountStatus === "disabled";
 }
 
 export interface Contact {

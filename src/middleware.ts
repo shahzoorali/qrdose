@@ -5,7 +5,8 @@ import { authConfig } from "@/lib/auth.config";
 export const { auth: middleware } = NextAuth(authConfig);
 
 export const config = {
-  // Protect the portal. Public routes (/, /login, /signup, /t/*, /api/*)
-  // are excluded; API auth is enforced per-route via auth().
-  matcher: ["/dashboard/:path*"],
+  // Protect the portal and admin area. Public routes (/, /login, /signup,
+  // /t/*, /api/*) are excluded; API auth is enforced per-route via auth().
+  // Admin role (DB-dependent) is checked in the /admin layout, not the edge.
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

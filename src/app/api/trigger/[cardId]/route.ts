@@ -7,7 +7,7 @@ import { sendSms } from "@/lib/sns";
 import { TRIGGER_COOLDOWN_SECONDS, STRIPE_ENABLED } from "@/lib/env";
 import { rateLimit, clientIp, tooManyResponse } from "@/lib/rate-limit";
 import { hasActiveSubscription } from "@/lib/billing";
-import type { TriggerLog } from "@/lib/types";
+import { isAccountDisabled, type TriggerLog } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -39,6 +39,14 @@ export async function POST(
   const user = await getUserById(userId);
   if (!user) {
     return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  }
+
+  // Disabled accounts cannot send notifications.
+  if (isAccountDisabled(user)) {
+    return NextResponse.json(
+      { error: "This account is disabled." },
+      { status: 403 }
+    );
   }
 
   // When Stripe is live, require an active subscription to send.

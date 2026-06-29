@@ -30,6 +30,16 @@ export const settingsSchema = z.object({
   phone: z.string().trim().min(1, "Phone number is required"),
 });
 
+export const adminPasswordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters").max(200),
+});
+
+export const accountStatusSchema = z.object({
+  status: z.enum(["active", "disabled"], {
+    message: "Status must be active or disabled",
+  }),
+});
+
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type ContactInput = z.infer<typeof contactSchema>;
