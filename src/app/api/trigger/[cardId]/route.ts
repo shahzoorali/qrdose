@@ -11,14 +11,17 @@ import { isAccountDisabled, type TriggerLog } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-/** "Murt has taken his medication" -> "...at 2:34 PM." in the user's timezone. */
+/** "Murt has taken his medication" -> "This message is from QRdose. ...at 2:34 PM on Jun 30, 2026." */
 function formatMessage(base: string, timezone: string, when: Date): string {
-  const time = new Intl.DateTimeFormat("en-US", {
+  const dateTime = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
     timeZone: timezone || "America/Chicago",
   }).format(when);
-  return `${base} at ${time}.`;
+  return `This message is from QRdose. ${base} at ${dateTime}.`;
 }
 
 export async function POST(
