@@ -32,6 +32,10 @@ export const settingsSchema = z.object({
   }),
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   phone: z.string().trim().min(1, "Phone number is required"),
+  address: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(2).optional(),
+  zip: z.string().trim().regex(/^(\d{5}(-\d{4})?)?$/, "Enter a valid ZIP code").optional(),
 });
 
 export const adminPasswordSchema = z.object({

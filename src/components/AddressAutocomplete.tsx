@@ -11,6 +11,7 @@ interface AddressFields {
 
 interface Props {
   onChange: (fields: AddressFields) => void;
+  initialValues?: AddressFields;
 }
 
 declare global {
@@ -25,14 +26,11 @@ const inputClass =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200";
 const labelClass = "text-sm font-medium text-slate-700";
 
-export function AddressAutocomplete({ onChange }: Props) {
+export function AddressAutocomplete({ onChange, initialValues }: Props) {
   const streetRef = useRef<HTMLInputElement>(null);
-  const [fields, setFields] = useState<AddressFields>({
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-  });
+  const [fields, setFields] = useState<AddressFields>(
+    initialValues ?? { address: "", city: "", state: "", zip: "" }
+  );
 
   useEffect(() => {
     function initAutocomplete() {

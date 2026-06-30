@@ -2,22 +2,37 @@
 
 import { useState } from "react";
 import { US_TIMEZONES } from "@/lib/timezones";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 export function SettingsForm({
   initialName,
   initialTimezone,
   initialEmail,
   initialPhone,
+  initialAddress,
+  initialCity,
+  initialState,
+  initialZip,
 }: {
   initialName: string;
   initialTimezone: string;
   initialEmail: string;
   initialPhone: string;
+  initialAddress?: string;
+  initialCity?: string;
+  initialState?: string;
+  initialZip?: string;
 }) {
   const [name, setName] = useState(initialName);
   const [timezone, setTimezone] = useState(initialTimezone);
   const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState(initialPhone);
+  const [address, setAddress] = useState({
+    address: initialAddress ?? "",
+    city: initialCity ?? "",
+    state: initialState ?? "",
+    zip: initialZip ?? "",
+  });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -30,7 +45,7 @@ export function SettingsForm({
     const res = await fetch("/api/account", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, timezone, email, phone }),
+      body: JSON.stringify({ name, timezone, email, phone, ...address }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -91,6 +106,11 @@ export function SettingsForm({
           className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
         />
       </label>
+
+      <AddressAutocomplete
+        initialValues={address}
+        onChange={(f) => { setAddress(f); setSaved(false); }}
+      />
 
       <label className="block">
         <span className="text-sm font-medium text-slate-700">Timezone</span>

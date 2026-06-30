@@ -19,7 +19,7 @@ export async function PUT(req: Request) {
     );
   }
 
-  const { name, timezone, email } = parsed.data;
+  const { name, timezone, email, address, city, state, zip } = parsed.data;
 
   const phone = normalizeUsPhone(parsed.data.phone);
   if (!phone) {
@@ -38,6 +38,6 @@ export async function PUT(req: Request) {
     );
   }
 
-  await updateUserSettings(userId, { name, timezone, phone, email });
+  await updateUserSettings(userId, { name, timezone, phone, email, address, city, state, zip });
   return NextResponse.json({ ok: true });
 }
