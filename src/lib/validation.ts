@@ -6,6 +6,10 @@ export const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters").max(200),
   phone: z.string().trim().min(1, "Phone number is required"),
+  address: z.string().trim().min(1, "Street address is required").max(200),
+  city: z.string().trim().min(1, "City is required").max(100),
+  state: z.string().trim().min(2, "State is required").max(2),
+  zip: z.string().trim().regex(/^\d{5}(-\d{4})?$/, "Enter a valid ZIP code"),
 });
 
 export const contactSchema = z.object({
@@ -28,6 +32,10 @@ export const settingsSchema = z.object({
   }),
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   phone: z.string().trim().min(1, "Phone number is required"),
+  address: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(2).optional(),
+  zip: z.string().trim().regex(/^(\d{5}(-\d{4})?)?$/, "Enter a valid ZIP code").optional(),
 });
 
 export const adminPasswordSchema = z.object({

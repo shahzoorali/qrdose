@@ -18,6 +18,11 @@ export interface User {
   // Billing (Stripe). Optional so existing records remain valid.
   stripeCustomerId?: string;
   subscriptionStatus?: SubscriptionStatus;
+  // Mailing address (US). Optional so existing records remain valid.
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   // Admin & account control. Optional so existing records remain valid.
   isAdmin?: boolean;
   accountStatus?: AccountStatus; // undefined treated as "active"

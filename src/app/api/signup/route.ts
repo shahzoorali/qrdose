@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { name, email, password, phone } = parsed.data;
+  const { name, email, password, phone, address, city, state, zip } = parsed.data;
 
   const phoneE164 = normalizeUsPhone(phone);
   if (!phoneE164) {
@@ -56,6 +56,10 @@ export async function POST(req: Request) {
     timezone: DEFAULT_TIMEZONE,
     createdAt: new Date().toISOString(),
     subscriptionStatus: "none",
+    address,
+    city,
+    state,
+    zip,
   };
 
   await createUser(user);

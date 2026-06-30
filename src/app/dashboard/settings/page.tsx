@@ -21,6 +21,10 @@ export default async function SettingsPage() {
           initialTimezone={user.timezone}
           initialEmail={user.email}
           initialPhone={user.phone}
+          initialAddress={user.address}
+          initialCity={user.city}
+          initialState={user.state}
+          initialZip={user.zip}
         />
       </div>
     </div>
