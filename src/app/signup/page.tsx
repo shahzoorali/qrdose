@@ -5,11 +5,18 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { AuthShell, Field } from "@/components/AuthShell";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 export default function SignupPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState({
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,6 +29,7 @@ export default function SignupPage() {
       email: String(form.get("email") ?? ""),
       password: String(form.get("password") ?? ""),
       phone: String(form.get("phone") ?? ""),
+      ...address,
     };
 
     try {
@@ -81,6 +89,7 @@ export default function SignupPage() {
           autoComplete="tel"
           placeholder="(415) 555-2671"
         />
+        <AddressAutocomplete onChange={setAddress} />
         <Field
           label="Password"
           name="password"
