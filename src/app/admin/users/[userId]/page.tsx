@@ -5,6 +5,7 @@ import { getUserById } from "@/lib/repositories/users";
 import { listContacts } from "@/lib/repositories/contacts";
 import { listTriggers } from "@/lib/repositories/history";
 import { toPublicUser } from "@/lib/types";
+import { qrDataUrl, triggerUrl } from "@/lib/qrcode";
 import { AdminUserForm } from "./AdminUserForm";
 
 export default async function AdminUserDetailPage({
@@ -18,9 +19,10 @@ export default async function AdminUserDetailPage({
   const user = await getUserById(userId);
   if (!user) notFound();
 
-  const [contacts, history] = await Promise.all([
+  const [contacts, history, qr] = await Promise.all([
     listContacts(userId),
     listTriggers(userId),
+    qrDataUrl(user.cardId),
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function AdminUserDetailPage({
         user={toPublicUser(user)}
         contacts={contacts}
         history={history}
+        card={{ cardId: user.cardId, url: triggerUrl(user.cardId), qr }}
         isSelf={admin?.userId === userId}
       />
     </div>
