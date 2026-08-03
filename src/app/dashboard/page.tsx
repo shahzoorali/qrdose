@@ -2,7 +2,6 @@ import Link from "next/link";
 import { currentUser } from "@/lib/session";
 import { countContacts } from "@/lib/repositories/contacts";
 import { listTriggers } from "@/lib/repositories/history";
-import { triggerUrl } from "@/lib/qrcode";
 
 export default async function OverviewPage() {
   const user = (await currentUser())!;
@@ -22,10 +21,9 @@ export default async function OverviewPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Stat label="Contacts" value={`${contactCount} / 10`} href="/dashboard/contacts" />
         <Stat label="Total triggers" value={`${triggers.length >= 5 ? "5+" : triggers.length}`} href="/dashboard/history" />
-        <Stat label="Your card" value="View QR" href="/dashboard/card" />
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -44,12 +42,10 @@ export default async function OverviewPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="text-sm font-medium text-slate-500">Trigger link</h2>
-        <code className="mt-2 block break-all rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          {triggerUrl(user.cardId)}
-        </code>
-        <p className="mt-2 text-xs text-slate-400">
-          This URL is encoded in your QR code and NFC card.
+        <h2 className="text-sm font-medium text-slate-500">Your card</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Your QRdose card is issued and managed by QRdose. Contact support if
+          your card is lost, damaged, or needs to be replaced.
         </p>
       </section>
 

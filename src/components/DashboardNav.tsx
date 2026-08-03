@@ -7,7 +7,6 @@ const baseLinks = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/contacts", label: "Contacts" },
   { href: "/dashboard/message", label: "Message" },
-  { href: "/dashboard/card", label: "Card" },
   { href: "/dashboard/history", label: "History" },
   { href: "/dashboard/billing", label: "Billing" },
   { href: "/dashboard/settings", label: "Settings" },

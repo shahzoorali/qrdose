@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { US_TIMEZONES } from "@/lib/timezones";
 import { formatUsPhone } from "@/lib/phone";
@@ -10,15 +11,23 @@ const inputCls =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200";
 const cardCls = "rounded-2xl border border-slate-200 bg-white p-6";
 
+interface CardInfo {
+  cardId: string;
+  url: string;
+  qr: string; // PNG data URL
+}
+
 export function AdminUserForm({
   user,
   contacts,
   history,
+  card: initialCard,
   isSelf,
 }: {
   user: PublicUser;
   contacts: Contact[];
   history: TriggerLog[];
+  card: CardInfo;
   isSelf: boolean;
 }) {
   const router = useRouter();
@@ -28,6 +37,10 @@ export function AdminUserForm({
   const [email, setEmail] = useState(user.email);
   const [phone, setPhone] = useState(user.phone);
   const [timezone, setTimezone] = useState(user.timezone);
+  const [address, setAddress] = useState(user.address ?? "");
+  const [city, setCity] = useState(user.city ?? "");
+  const [state, setState] = useState(user.state ?? "");
+  const [zip, setZip] = useState(user.zip ?? "");
   const [detailsMsg, setDetailsMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [savingDetails, setSavingDetails] = useState(false);
 
@@ -38,7 +51,7 @@ export function AdminUserForm({
     const res = await fetch(`/api/admin/users/${user.userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone, timezone }),
+      body: JSON.stringify({ name, email, phone, timezone, address, city, state, zip }),
     });
     setSavingDetails(false);
     const data = await res.json().catch(() => ({}));
@@ -96,6 +109,28 @@ export function AdminUserForm({
     }
     setDisabled(next === "disabled");
     router.refresh();
+  }
+
+  // ── Card ─────────────────────────────────────────────────────────
+  const [card, setCard] = useState(initialCard);
+  const [confirmingCard, setConfirmingCard] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [cardErr, setCardErr] = useState<string | null>(null);
+
+  async function regenerateCard() {
+    setRegenerating(true);
+    setCardErr(null);
+    const res = await fetch(`/api/admin/users/${user.userId}/card`, {
+      method: "POST",
+    });
+    setRegenerating(false);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setCardErr(data.error ?? "Could not issue a new card");
+      return;
+    }
+    setCard(data);
+    setConfirmingCard(false);
   }
 
   // ── Delete ───────────────────────────────────────────────────────
@@ -164,6 +199,24 @@ export function AdminUserForm({
             ))}
           </select>
         </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Street address</span>
+          <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className={inputCls} />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">City</span>
+            <input value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">State</span>
+            <input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} maxLength={2} placeholder="TX" className={inputCls} />
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">ZIP code</span>
+          <input value={zip} onChange={(e) => setZip(e.target.value)} maxLength={10} placeholder="78701" className={inputCls} />
+        </label>
         {detailsMsg && (
           <p className={`text-sm ${detailsMsg.ok ? "text-green-600" : "text-red-600"}`}>
             {detailsMsg.text}
@@ -228,6 +281,78 @@ export function AdminUserForm({
         >
           {savingStatus ? "Saving…" : disabled ? "Enable account" : "Disable account"}
         </button>
+      </div>
+
+      {/* Card / QR code (admin-only view) */}
+      <div className={`${cardCls} space-y-4`}>
+        <h2 className="text-sm font-semibold text-slate-900">QR card</h2>
+        <div className="grid gap-6 sm:grid-cols-[auto,1fr] sm:items-start">
+          <div className="text-center">
+            {/* Data-URL QR; unoptimized to skip the next/image loader. */}
+            <Image
+              src={card.qr}
+              alt={`QR code for ${user.name}`}
+              width={220}
+              height={220}
+              unoptimized
+              className="mx-auto rounded-lg border border-slate-200"
+            />
+            <a
+              href={card.qr}
+              download={`qrdose-${card.cardId}.png`}
+              className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Download PNG
+            </a>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Trigger link (for NFC programming)
+              </p>
+              <code className="mt-1 block break-all rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                {card.url}
+              </code>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Card ID</p>
+              <code className="mt-1 block rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                {card.cardId}
+              </code>
+            </div>
+            {cardErr && <p className="text-sm text-red-600">{cardErr}</p>}
+            {confirmingCard ? (
+              <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+                <p className="text-amber-800">
+                  Issuing a new card creates a new QR/link and{" "}
+                  <strong>permanently disables the old card</strong>. Continue?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={regenerateCard}
+                    disabled={regenerating}
+                    className="rounded-lg bg-amber-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
+                  >
+                    {regenerating ? "Issuing…" : "Yes, issue new card"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingCard(false)}
+                    className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingCard(true)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Issue new card
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Contacts (read-only) */}
