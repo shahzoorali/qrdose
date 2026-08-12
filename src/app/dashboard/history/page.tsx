@@ -22,7 +22,7 @@ export default async function HistoryPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Trigger history
+          Notification history
         </h1>
         <p className="mt-1 text-slate-600">
           Every time your card was tapped and contacts were notified.
@@ -31,7 +31,7 @@ export default async function HistoryPage() {
 
       <div className="rounded-2xl border border-slate-200 bg-white">
         {triggers.length === 0 ? (
-          <p className="p-6 text-slate-500">No triggers yet.</p>
+          <p className="p-6 text-slate-500">No notifications yet.</p>
         ) : (
           <ul className="divide-y divide-slate-100">
             {triggers.map((t) => (

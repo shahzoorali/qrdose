@@ -266,7 +266,7 @@ export function AdminUserForm({
           <span className={disabled ? "font-semibold text-red-700" : "font-semibold text-green-700"}>
             {disabled ? "disabled" : "active"}
           </span>
-          . {disabled ? "The user cannot log in and their card won't send notifications." : "Disabling blocks login and SMS triggers."}
+          . {disabled ? "The user cannot log in and their card won't send notifications." : "Disabling blocks login and SMS notifications."}
         </p>
         {statusMsg && <p className="text-sm text-red-600">{statusMsg}</p>}
         {isSelf && !disabled && (
@@ -308,7 +308,7 @@ export function AdminUserForm({
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium text-slate-500">
-                Trigger link (for NFC programming)
+                Notification link (for NFC programming)
               </p>
               <code className="mt-1 block break-all rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
                 {card.url}

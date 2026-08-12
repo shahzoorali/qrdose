@@ -7,7 +7,20 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Logo />
+          <div>
+            <Logo />
+            <p className="mt-1 text-[11px] font-medium text-slate-500">
+              Powered by{" "}
+              <a
+                href="https://qridlok.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-slate-700"
+              >
+                Qridlok emergency network
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <a
               href="#how"
@@ -31,7 +44,7 @@ export default function LandingPage() {
               href="/signup"
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
-              Get started
+              Create account
             </Link>
           </div>
         </nav>
@@ -42,24 +55,14 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-50 to-slate-50" />
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:py-28">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-medium text-brand-700">
-              No app required • Works with any phone
-            </span>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              One tap tells everyone who&nbsp;cares.
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              Medication management, Simplified
             </h1>
             <p className="mt-5 max-w-xl text-lg text-slate-600">
-              QRdose turns a single tap or scan into an instant text to up to 10
-              loved ones — &ldquo;Murt has taken his medication.&rdquo; No app,
-              no fuss. Just a card on the fridge and peace of mind.
+              QRdose notifies up to 10 contacts all at once, with a single tap
+              or scan. No app, no fuss.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link
-                href="/signup"
-                className="rounded-lg bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700"
-              >
-                Create your card
-              </Link>
               <a
                 href="#how"
                 className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -93,14 +96,14 @@ export default function LandingPage() {
                 </svg>
               </div>
               <p className="mt-4 text-center text-sm font-medium text-slate-500">
-                Murt&apos;s daily check-in
+                Carol&apos;s daily check-in
               </p>
             </div>
 
             <div className="absolute -bottom-8 -right-2 w-64 rotate-[4deg] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
               <p className="text-xs font-medium text-slate-400">Text message</p>
               <p className="mt-1 rounded-2xl rounded-bl-sm bg-brand-600 px-4 py-2 text-sm text-white">
-                Murt has taken his medication at 2:34 PM.
+                Carol has taken her medication at 2:34 PM.
               </p>
             </div>
           </div>
@@ -116,18 +119,18 @@ export default function LandingPage() {
           {[
             {
               step: "1",
-              title: "Add your people",
-              body: "Register, then add up to 10 contacts and write the one message they'll receive.",
+              title: "Create account",
+              body: "Sign up in a couple of minutes — no app to download.",
             },
             {
               step: "2",
-              title: "Get your card",
-              body: "We generate a unique QR + NFC card. Stick it on the fridge, the pill box, anywhere.",
+              title: "Add your contacts",
+              body: "Add contact info and create a personalized message for your contacts.",
             },
             {
               step: "3",
-              title: "Tap to notify",
-              body: "A tap or scan opens a page — confirm, and everyone gets a text in seconds.",
+              title: "Tap or scan",
+              body: "Receive your ready to use card. Tap or scan to send notifications to your contacts.",
             },
           ].map((s) => (
             <div
@@ -184,13 +187,13 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8">
             <div className="space-y-3">
               <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm text-slate-800 shadow-sm">
-                Murt has taken his medication at 8:02 AM.
+                Carol has taken her medication at 8:02 AM.
               </div>
               <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm text-slate-800 shadow-sm">
-                Murt has taken his medication at 2:34 PM.
+                Carol has taken her medication at 2:34 PM.
               </div>
               <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm text-slate-800 shadow-sm">
-                Murt has taken his medication at 9:15 PM.
+                Carol has taken her medication at 9:15 PM.
               </div>
             </div>
           </div>
@@ -214,7 +217,7 @@ export default function LandingPage() {
             <li>QR + NFC card included</li>
             <li>Up to 10 contacts</li>
             <li>Unlimited notifications</li>
-            <li>Trigger history &amp; web portal</li>
+            <li>Notification history &amp; web portal</li>
           </ul>
           <button
             disabled
@@ -233,13 +236,13 @@ export default function LandingPage() {
       <section className="bg-brand-600">
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white">
-            Ready for one-tap peace of mind?
+            Ready to simplify your medication?
           </h2>
           <Link
             href="/signup"
             className="mt-8 inline-block rounded-lg bg-white px-8 py-3 text-base font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50"
           >
-            Create your free account
+            Get started today
           </Link>
         </div>
       </section>
@@ -247,9 +250,22 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 sm:flex-row">
-          <Logo />
+          <div>
+            <Logo />
+            <p className="mt-1 text-[11px] font-medium text-slate-500">
+              Powered by{" "}
+              <a
+                href="https://qridlok.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-slate-700"
+              >
+                Qridlok emergency network
+              </a>
+            </p>
+          </div>
           <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} QRdose.com — US only.
+            © {new Date().getFullYear()} QRdose.com
           </p>
         </div>
       </footer>
