@@ -1,54 +1,11 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <Logo />
-            <p className="mt-1 text-[11px] font-medium text-slate-500">
-              Powered by{" "}
-              <a
-                href="https://qridlok.com/"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-slate-700"
-              >
-                Qridlok emergency network
-              </a>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href="#how"
-              className="hidden text-sm font-medium text-slate-600 hover:text-slate-900 sm:block"
-            >
-              How it works
-            </a>
-            <a
-              href="#pricing"
-              className="hidden text-sm font-medium text-slate-600 hover:text-slate-900 sm:block"
-            >
-              Pricing
-            </a>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
-            >
-              Create account
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <SiteHeader />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
