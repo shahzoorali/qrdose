@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { currentUserId } from "@/lib/session";
-import { contactSchema } from "@/lib/validation";
-import { normalizeUsPhone } from "@/lib/phone";
-import { deleteContact, putContact } from "@/lib/repositories/contacts";
-import type { Contact } from "@/lib/types";
+import { medicationSchema } from "@/lib/validation";
+import {
+  deleteMedication,
+  getMedication,
+  putMedication,
+} from "@/lib/repositories/medications";
+import type { Medication } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -16,7 +19,7 @@ export async function PUT(
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
-  const parsed = contactSchema.safeParse(body);
+  const parsed = medicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Invalid input" },
@@ -24,25 +27,20 @@ export async function PUT(
     );
   }
 
-  const phoneE164 = normalizeUsPhone(parsed.data.phone);
-  if (!phoneE164) {
-    return NextResponse.json(
-      { error: "Enter a valid US phone number" },
-      { status: 400 }
-    );
+  const existing = await getMedication(userId, id);
+  if (!existing) {
+    return NextResponse.json({ error: "Medication not found" }, { status: 404 });
   }
 
-  // Upsert preserving the id; createdAt is reset to now for simplicity.
-  const contact: Contact = {
-    contactId: id,
+  const medication: Medication = {
+    ...existing,
     name: parsed.data.name,
-    phone: phoneE164,
-    createdAt: new Date().toISOString(),
-    email: parsed.data.email || undefined,
+    time: parsed.data.time,
+    enabled: parsed.data.enabled ?? existing.enabled,
   };
-  await putContact(userId, contact);
+  await putMedication(userId, medication);
 
-  return NextResponse.json({ contact });
+  return NextResponse.json({ medication });
 }
 
 export async function DELETE(
@@ -53,6 +51,6 @@ export async function DELETE(
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  await deleteContact(userId, id);
+  await deleteMedication(userId, id);
   return NextResponse.json({ ok: true });
 }

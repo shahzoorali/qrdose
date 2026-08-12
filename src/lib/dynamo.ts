@@ -30,6 +30,9 @@ export const pkUser = (userId: string) => `USER#${userId}`;
 export const skProfile = () => "PROFILE";
 export const skContact = (contactId: string) => `CONTACT#${contactId}`;
 export const skTrigger = (iso: string) => `TRIGGER#${iso}`;
+export const skMedication = (medId: string) => `MED#${medId}`;
+/** One dose record per medication per local date. */
+export const skDose = (medId: string, date: string) => `DOSE#${medId}#${date}`;
 export const pkCard = (cardId: string) => `CARD#${cardId}`;
 export const skCard = () => "CARD";
 export const gsi1Email = (email: string) => `EMAIL#${email.toLowerCase()}`;

@@ -169,6 +169,39 @@ export async function updateUserSettings(
   );
 }
 
+/**
+ * Persist the reminder switch and grace window.
+ *
+ * Turning reminders on stamps `remindersEnabledAt`, which the reminder sweep
+ * uses as a floor so doses from before the user opted in are never alerted on.
+ */
+export async function updateReminderSettings(
+  userId: string,
+  settings: {
+    remindersEnabled: boolean;
+    reminderGraceMinutes: number;
+    enabledAt?: string;
+  }
+): Promise<void> {
+  const sets = ["remindersEnabled = :on", "reminderGraceMinutes = :grace"];
+  const values: Record<string, unknown> = {
+    ":on": settings.remindersEnabled,
+    ":grace": settings.reminderGraceMinutes,
+  };
+  if (settings.enabledAt) {
+    sets.push("remindersEnabledAt = :at");
+    values[":at"] = settings.enabledAt;
+  }
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      UpdateExpression: `SET ${sets.join(", ")}`,
+      ExpressionAttributeValues: values,
+    })
+  );
+}
+
 export async function updatePassword(
   userId: string,
   passwordHash: string

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MedicationReminders } from "@/components/MedicationReminders";
 
 interface Contact {
   contactId: string;
   name: string;
   phone: string;
+  email?: string;
 }
 
 export default function ContactsPage() {
@@ -13,6 +15,7 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -31,6 +34,7 @@ export default function ContactsPage() {
   function resetForm() {
     setName("");
     setPhone("");
+    setEmail("");
     setEditingId(null);
     setError(null);
   }
@@ -44,7 +48,7 @@ export default function ContactsPage() {
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, email }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -60,6 +64,7 @@ export default function ContactsPage() {
     setEditingId(c.contactId);
     setName(c.name);
     setPhone(c.phone);
+    setEmail(c.email ?? "");
     setError(null);
   }
 
@@ -78,7 +83,9 @@ export default function ContactsPage() {
           Contacts
         </h1>
         <p className="mt-1 text-slate-600">
-          Up to 10 people who get a text when your card is tapped.{" "}
+          Up to 10 people who get a text when your card is tapped, and who are
+          notified if you miss a dose. Email is optional and only used for
+          missed-dose alerts.{" "}
           <span className="font-medium text-slate-700">
             {contacts.length} / 10
           </span>
@@ -87,7 +94,7 @@ export default function ContactsPage() {
 
       <form
         onSubmit={save}
-        className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+        className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
       >
         <label className="block">
           <span className="text-sm font-medium text-slate-700">Name</span>
@@ -105,6 +112,18 @@ export default function ContactsPage() {
             onChange={(e) => setPhone(e.target.value)}
             required
             placeholder="(415) 555-2671"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">
+            Email (optional)
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="carol@example.com"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
           />
         </label>
@@ -127,10 +146,10 @@ export default function ContactsPage() {
           )}
         </div>
         {error && (
-          <p className="text-sm text-red-600 sm:col-span-3">{error}</p>
+          <p className="text-sm text-red-600 sm:col-span-4">{error}</p>
         )}
         {atLimit && (
-          <p className="text-sm text-amber-700 sm:col-span-3">
+          <p className="text-sm text-amber-700 sm:col-span-4">
             You&apos;ve reached the 10-contact limit. Remove one to add another.
           </p>
         )}
@@ -150,7 +169,10 @@ export default function ContactsPage() {
               >
                 <div>
                   <p className="font-medium text-slate-900">{c.name}</p>
-                  <p className="text-sm text-slate-500">{c.phone}</p>
+                  <p className="text-sm text-slate-500">
+                    {c.phone}
+                    {c.email && ` • ${c.email}`}
+                  </p>
                 </div>
                 <div className="flex gap-3 text-sm font-medium">
                   <button
@@ -171,6 +193,10 @@ export default function ContactsPage() {
           </ul>
         )}
       </div>
+
+      <hr className="border-slate-200" />
+
+      <MedicationReminders />
     </div>
   );
 }

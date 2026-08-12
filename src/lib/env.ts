@@ -28,6 +28,30 @@ export const TRIGGER_COOLDOWN_SECONDS = Number(
 /** Max contacts a user may configure (per product spec). */
 export const MAX_CONTACTS = 10;
 
+// ── Medication reminders ────────────────────────────────────────────
+/** Max medications a user may configure (per product spec). */
+export const MAX_MEDICATIONS = 10;
+
+/** Minutes after a scheduled dose before the user is reminded. Users can
+ *  override this per account; this is the fallback for accounts that haven't. */
+export const DEFAULT_REMINDER_GRACE_MINUTES = Number(
+  process.env.DEFAULT_REMINDER_GRACE_MINUTES || "30"
+);
+
+/** Contacts are escalated to at (dose time + grace * this multiplier). */
+export const REMINDER_ESCALATION_MULTIPLIER = 2;
+
+/** A scan counts as confirming any scheduled dose within this many minutes. */
+export const DOSE_MATCH_WINDOW_MINUTES = Number(
+  process.env.DOSE_MATCH_WINDOW_MINUTES || "180"
+);
+
+/** Verified SES sender, e.g. "QRdose <alerts@qrdose.com>". Empty disables email. */
+export const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL || "";
+
+/** Shared secret the reminder cron endpoint requires. Empty disables the cron. */
+export const CRON_SECRET = process.env.CRON_SECRET || "";
+
 /** Default timezone for new accounts (US central). */
 export const DEFAULT_TIMEZONE = "America/Chicago";
 

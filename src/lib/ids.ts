@@ -21,6 +21,10 @@ export function newContactId(): string {
   return randomUUID();
 }
 
+export function newMedicationId(): string {
+  return randomUUID();
+}
+
 /** Card id is the secret embedded in the QR code and NFC card URL. */
 export function newCardId(): string {
   return base62Token(16);

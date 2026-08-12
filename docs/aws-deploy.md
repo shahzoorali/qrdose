@@ -88,9 +88,55 @@ Optional / feature-gated:
 | `STRIPE_SECRET_KEY`       | Billing stays disabled until all three are set.   |
 | `STRIPE_WEBHOOK_SECRET`   | From the Stripe webhook endpoint.                 |
 | `STRIPE_PRICE_ID`         | The subscription price.                           |
+| `SES_FROM_EMAIL`          | Verified sender. Blank disables reminder emails.  |
+| `CRON_SECRET`             | Blank leaves the reminder cron disabled.          |
+| `DEFAULT_REMINDER_GRACE_MINUTES` | Default `30`.                              |
+| `DOSE_MATCH_WINDOW_MINUTES`      | Default `180`.                             |
 
 Do **not** set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — the service role
 supplies them.
+
+## Medication reminders (SES + EventBridge)
+
+Reminders need two AWS pieces beyond the app itself.
+
+### 1. SES — sending the emails
+
+The `qrdose.com` domain identity is verified, which lets SES send **as**
+that domain. Sending **to** arbitrary addresses also requires production
+access: while the account is in the SES sandbox, mail is only delivered to
+verified recipients, so contact escalation emails will be silently dropped.
+
+- [ ] Request SES production access for `us-east-1` (Account dashboard →
+      "Request production access"). Approval is typically under 24 hours.
+- [ ] Set `SES_FROM_EMAIL` to a sender on the verified domain.
+- [ ] Grant the Amplify service role `ses:SendEmail`.
+
+SMS reminders work without any of this — email is additive, and the app
+no-ops email cleanly when `SES_FROM_EMAIL` is blank.
+
+### 2. EventBridge — running the sweep
+
+`POST /api/cron/reminders` does one pass: it walks every account with
+reminders on and sends whatever is due. It is idempotent (all state lives in
+per-dose records), so running it early, twice, or concurrently sends no
+duplicates.
+
+Create an **EventBridge Scheduler** schedule:
+
+- Schedule: `rate(5 minutes)`
+- Target: **API destination** pointing at
+  `https://<domain>/api/cron/reminders`, method `POST`
+- Header: `x-cron-secret: <the CRON_SECRET value>`
+
+The endpoint returns `401` unless the header matches `CRON_SECRET`, and stays
+disabled entirely while `CRON_SECRET` is blank — so nothing fires until you
+deliberately turn it on.
+
+Reminder cadence is per account: the user is texted and emailed at
+(dose time + their grace window), and contacts are notified only if the dose
+is still unconfirmed at double that. A dose stops being actionable roughly 6
+hours after the escalation point.
 
 ## Post-deploy checklist
 
@@ -100,3 +146,6 @@ supplies them.
 - [ ] Verify SNS is out of the SMS sandbox for production sending.
 - [ ] Confirm DynamoDB TTL is enabled on the `ttl` attribute (the create-table
       script does this).
+- [ ] Request SES production access, then set `SES_FROM_EMAIL`.
+- [ ] Set `CRON_SECRET` and create the EventBridge schedule for
+      `/api/cron/reminders`.

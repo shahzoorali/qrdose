@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     name: parsed.data.name,
     phone: phoneE164,
     createdAt: new Date().toISOString(),
+    email: parsed.data.email || undefined,
   };
   await putContact(userId, contact);
 

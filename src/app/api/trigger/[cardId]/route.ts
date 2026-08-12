@@ -8,6 +8,7 @@ import { TRIGGER_COOLDOWN_SECONDS, STRIPE_ENABLED } from "@/lib/env";
 import { rateLimit, clientIp, tooManyResponse } from "@/lib/rate-limit";
 import { hasActiveSubscription } from "@/lib/billing";
 import { isAccountDisabled, type TriggerLog } from "@/lib/types";
+import { markDosesTakenNearby } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 
@@ -120,6 +121,10 @@ export async function POST(
     successCount,
     status,
   });
+
+  // A scan is the user confirming they took their medication — clear any
+  // doses scheduled around now so reminders don't fire for them.
+  await markDosesTakenNearby(user, now);
 
   if (successCount === 0) {
     return NextResponse.json(
