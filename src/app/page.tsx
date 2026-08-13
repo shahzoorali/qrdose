@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoMark } from "@/components/Logo";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export default function LandingPage() {
@@ -27,9 +27,6 @@ export default function LandingPage() {
                 See how it works
               </a>
             </div>
-            <p className="mt-4 text-sm text-slate-500">
-              Tap an NFC card or scan a QR code — that&apos;s the whole flow.
-            </p>
           </div>
 
           {/* Visual: card + sample SMS */}
@@ -72,7 +69,10 @@ export default function LandingPage() {
         <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
           Set it up once. Tap it every day.
         </h2>
-        <div className="mt-14 grid gap-8 md:grid-cols-3">
+        <div className="mt-6 flex justify-center">
+          <LogoMark className="h-12 w-auto" />
+        </div>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
           {[
             {
               step: "1",
@@ -94,9 +94,12 @@ export default function LandingPage() {
               key={s.step}
               className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-100 font-bold text-brand-700">
-                {s.step}
-              </span>
+              <div className="flex items-center justify-between gap-4">
+                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-brand-100 font-bold text-brand-700">
+                  {s.step}
+                </span>
+                <LogoMark className="h-7 w-auto opacity-60" />
+              </div>
               <h3 className="mt-5 text-lg font-semibold text-slate-900">
                 {s.title}
               </h3>
