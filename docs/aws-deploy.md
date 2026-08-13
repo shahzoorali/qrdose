@@ -89,6 +89,7 @@ Optional / feature-gated:
 | `STRIPE_WEBHOOK_SECRET`   | From the Stripe webhook endpoint.                 |
 | `STRIPE_PRICE_ID`         | The subscription price.                           |
 | `SES_FROM_EMAIL`          | Verified sender. Blank disables reminder emails.  |
+| `SES_REGION`              | Default `ap-south-1` — where the identity lives.  |
 | `CRON_SECRET`             | Blank leaves the reminder cron disabled.          |
 | `DEFAULT_REMINDER_GRACE_MINUTES` | Default `30`.                              |
 | `DOSE_MATCH_WINDOW_MINUTES`      | Default `180`.                             |
@@ -102,15 +103,17 @@ Reminders need two AWS pieces beyond the app itself.
 
 ### 1. SES — sending the emails
 
-The `qrdose.com` domain identity is verified, which lets SES send **as**
-that domain. Sending **to** arbitrary addresses also requires production
-access: while the account is in the SES sandbox, mail is only delivered to
-verified recipients, so contact escalation emails will be silently dropped.
+**SES runs in a different region from the rest of the stack.** SES identities
+are per-region, and `qrdose.com` is verified in `ap-south-1` (DKIM passing,
+production access granted, healthy). DynamoDB and SNS stay in `us-east-1`.
+That is why `SES_REGION` exists separately from `AWS_REGION` — pointing SES at
+`us-east-1` fails twice over: that region has no verified identities, and its
+SES account is in `EnforcementStatus: SHUTDOWN`.
 
-- [ ] Request SES production access for `us-east-1` (Account dashboard →
-      "Request production access"). Approval is typically under 24 hours.
+- [ ] Leave `SES_REGION` at `ap-south-1` unless you move the identity.
 - [ ] Set `SES_FROM_EMAIL` to a sender on the verified domain.
-- [ ] Grant the Amplify service role `ses:SendEmail`.
+- [ ] Grant the Amplify service role `ses:SendEmail` (resource region
+      `ap-south-1`).
 
 SMS reminders work without any of this — email is additive, and the app
 no-ops email cleanly when `SES_FROM_EMAIL` is blank.
@@ -146,6 +149,9 @@ hours after the escalation point.
 - [ ] Verify SNS is out of the SMS sandbox for production sending.
 - [ ] Confirm DynamoDB TTL is enabled on the `ttl` attribute (the create-table
       script does this).
-- [ ] Request SES production access, then set `SES_FROM_EMAIL`.
+- [ ] Set `SES_FROM_EMAIL`, and confirm `SES_REGION` matches the region the
+      sending domain is verified in.
+- [ ] Raise the SNS `MonthlySpendLimit` if reminders are expected at volume —
+      a missed dose fans out to every contact.
 - [ ] Set `CRON_SECRET` and create the EventBridge schedule for
       `/api/cron/reminders`.

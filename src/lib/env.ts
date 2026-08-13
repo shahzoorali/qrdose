@@ -49,6 +49,14 @@ export const DOSE_MATCH_WINDOW_MINUTES = Number(
 /** Verified SES sender, e.g. "QRdose <alerts@qrdose.com>". Empty disables email. */
 export const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL || "";
 
+/**
+ * Region holding the verified SES identity. Separate from AWS_REGION because
+ * SES identities are per-region: qrdose.com is verified in ap-south-1 while
+ * DynamoDB and SNS run in us-east-1.
+ */
+export const SES_REGION =
+  process.env.SES_REGION || process.env.APP_SES_REGION || "ap-south-1";
+
 /** Shared secret the reminder cron endpoint requires. Empty disables the cron. */
 export const CRON_SECRET = process.env.CRON_SECRET || "";
 

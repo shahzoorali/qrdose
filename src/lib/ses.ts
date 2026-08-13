@@ -1,6 +1,6 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import {
-  AWS_REGION,
+  SES_REGION,
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
   SES_FROM_EMAIL,
@@ -8,8 +8,9 @@ import {
 
 const globalForSes = globalThis as unknown as { __qrdoseSes?: SESv2Client };
 
+// SES_REGION, not AWS_REGION — the verified identity lives in its own region.
 const sesConfig: ConstructorParameters<typeof SESv2Client>[0] = {
-  region: AWS_REGION,
+  region: SES_REGION,
 };
 if (AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY) {
   sesConfig.credentials = {
