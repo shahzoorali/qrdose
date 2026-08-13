@@ -53,7 +53,7 @@ QRdose is built for anyone who checks in with loved ones on a regular schedule �
 **Why it matters:** The message is personal and specific — far more meaningful than a generic alert.
 
 **Key details:**
-- Written in plain language by the account holder (e.g. *"Murt has taken his medication"*)
+- Written in plain language by the account holder (e.g. *"Carol has taken her medication"*)
 - The time of the tap is automatically added to every message (e.g. *"…at 2:34 PM."*)
 - The message can be updated at any time through the web portal
 - Up to 280 characters

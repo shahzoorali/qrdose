@@ -12,7 +12,7 @@ import { markDosesTakenNearby } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 
-/** "Murt has taken his medication" -> "This message is from QRdose. ...at 2:34 PM on Jun 30, 2026." */
+/** "Carol has taken her medication" -> "This message is from QRdose. ...at 2:34 PM on Jun 30, 2026." */
 function formatMessage(base: string, timezone: string, when: Date): string {
   const dateTime = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",

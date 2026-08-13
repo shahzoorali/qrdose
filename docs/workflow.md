@@ -46,7 +46,7 @@ Account Holder
 │  3. Write Your Notification Message │
 │     • One message for all contacts  │
 │     • Example:                      │
-│       "Murt has taken his           │
+│       "Carol has taken her          │
 │        medication"                  │
 └────────────────┬────────────────────┘
                  │
@@ -80,7 +80,7 @@ This happens every time the card is tapped or scanned.
                   │  Confirmation Screen     │
                   │  appears on the phone    │
                   │                          │
-                  │  "Murt has taken his     │
+                  │  "Carol has taken her    │
                   │   medication"            │
                   │                          │
                   │  [ Notify My Contacts ]  │
@@ -135,7 +135,7 @@ Contact's Phone
 │                                          │
 │  Text message received:                  │
 │                                          │
-│  "Murt has taken his medication          │
+│  "Carol has taken her medication         │
 │   at 2:34 PM."                           │
 │                                          │
 │  ✓  No reply needed                      │
