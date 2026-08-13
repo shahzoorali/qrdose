@@ -151,6 +151,13 @@ hours after the escalation point.
       script does this).
 - [ ] Set `SES_FROM_EMAIL`, and confirm `SES_REGION` matches the region the
       sending domain is verified in.
+- [ ] Grant the runtime identity `ses:SendEmail`. The app authenticates with
+      the `APP_AWS_ACCESS_KEY_ID` static keys (IAM user `qrdose-app`), not the
+      Amplify service role — so the permission has to go on that user.
+- [ ] Remember that any new runtime variable must also be added to the
+      allowlist in `amplify.yml`. Amplify WEB_COMPUTE does not pass branch
+      variables to the Lambda, so a variable set only in the console is
+      invisible at runtime.
 - [ ] Raise the SNS `MonthlySpendLimit` if reminders are expected at volume —
       a missed dose fans out to every contact.
 - [ ] Set `CRON_SECRET` and create the EventBridge schedule for
