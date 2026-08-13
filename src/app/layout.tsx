@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QRdose — Tap to notify the people who care",
+  title: "QRdose — Medication management, Simplified",
   description:
-    "One tap or scan sends an instant text to up to 10 contacts. No app required. Perfect for medication and daily check-in alerts.",
+    "QRdose notifies up to 10 contacts all at once, with a single tap or scan. No app, no fuss. Get reminded by text and email if a dose is missed.",
 };
 
 export default function RootLayout({
