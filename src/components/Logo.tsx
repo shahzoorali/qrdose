@@ -24,10 +24,16 @@ export function LogoMark({
   );
 }
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({
+  className = "",
+  markClassName = "h-12 w-auto",
+}: {
+  className?: string;
+  markClassName?: string;
+}) {
   return (
     <Link href="/" className={`inline-flex items-center ${className}`}>
-      <LogoMark priority />
+      <LogoMark className={markClassName} priority />
     </Link>
   );
 }

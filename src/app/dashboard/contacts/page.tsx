@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MedicationReminders } from "@/components/MedicationReminders";
 
 interface Contact {
   contactId: string;
@@ -193,10 +192,6 @@ export default function ContactsPage() {
           </ul>
         )}
       </div>
-
-      <hr className="border-slate-200" />
-
-      <MedicationReminders />
     </div>
   );
 }

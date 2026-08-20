@@ -150,15 +150,7 @@ export function MedicationReminders() {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
-        <label className="flex items-center justify-between gap-4">
-          <span>
-            <span className="font-medium text-slate-900">
-              Turn reminders on
-            </span>
-            <span className="mt-0.5 block text-sm text-slate-500">
-              Master switch for every medication below.
-            </span>
-          </span>
+        <label className="flex items-center gap-4">
           <input
             type="checkbox"
             checked={remindersEnabled}
@@ -173,30 +165,39 @@ export function MedicationReminders() {
             }}
             className="h-5 w-5 flex-none accent-brand-600"
           />
+          <span>
+            <span className="font-medium text-slate-900">
+              Turn reminders on
+            </span>
+            <span className="mt-0.5 block text-sm text-slate-500">
+              Master switch for every medication below.
+            </span>
+          </span>
         </label>
 
         <label className="block border-t border-slate-100 pt-4">
-          <span className="font-medium text-slate-900">
-            Remind me this many minutes after a dose is due
+          <span className="flex items-center gap-2 font-medium text-slate-900">
+            Remind me after
+            <input
+              type="number"
+              min={5}
+              max={720}
+              value={grace}
+              disabled={loading}
+              onChange={(e) => {
+                setGrace(Number(e.target.value));
+                setSavedSettings(false);
+              }}
+              onBlur={() =>
+                saveSettings({
+                  remindersEnabled,
+                  reminderGraceMinutes: grace,
+                })
+              }
+              className="w-20 rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+            />
+            minutes
           </span>
-          <input
-            type="number"
-            min={5}
-            max={720}
-            value={grace}
-            disabled={loading}
-            onChange={(e) => {
-              setGrace(Number(e.target.value));
-              setSavedSettings(false);
-            }}
-            onBlur={() =>
-              saveSettings({
-                remindersEnabled,
-                reminderGraceMinutes: grace,
-              })
-            }
-            className="mt-1 w-32 rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-          />
           <span className="mt-1 block text-xs text-slate-400">
             Contacts are notified at double this ({grace * 2} minutes).
           </span>
@@ -217,7 +218,6 @@ export function MedicationReminders() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            placeholder="Metformin"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
           />
         </label>

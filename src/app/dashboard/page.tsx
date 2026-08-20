@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/session";
 import { countContacts } from "@/lib/repositories/contacts";
-import { listTriggers } from "@/lib/repositories/history";
 
 export default async function OverviewPage() {
   const user = (await currentUser())!;
-  const [contactCount, triggers] = await Promise.all([
-    countContacts(user.userId),
-    listTriggers(user.userId, 5),
-  ]);
+  const contactCount = await countContacts(user.userId);
 
   return (
     <div className="space-y-8">
@@ -23,7 +19,6 @@ export default async function OverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Stat label="Contacts" value={`${contactCount} / 10`} href="/dashboard/contacts" />
-        <Stat label="Total notifications" value={`${triggers.length >= 5 ? "5+" : triggers.length}`} href="/dashboard/history" />
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">

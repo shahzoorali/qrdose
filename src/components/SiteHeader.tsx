@@ -34,7 +34,7 @@ export function SiteHeader() {
       <div className="bg-gradient-to-b from-slate-50/95 to-transparent px-4 pb-4 pt-4 backdrop-blur sm:px-6">
         <nav className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-lg sm:px-6 sm:py-5">
           <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Logo className="pointer-events-auto h-16" />
+            <Logo className="pointer-events-auto" markClassName="h-20 w-auto" />
           </div>
 
           <button
