@@ -20,12 +20,55 @@ function StatusBadge({ user }: { user: PublicUser }) {
   );
 }
 
+type SortKey = "name" | "joined";
+type SortDir = "asc" | "desc";
+
+function SortHeader({
+  label,
+  active,
+  dir,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+}) {
+  return (
+    <th className="px-4 py-3 font-medium">
+      <button
+        type="button"
+        onClick={onClick}
+        className={`flex items-center gap-1 hover:text-slate-900 ${
+          active ? "text-slate-900" : ""
+        }`}
+      >
+        {label}
+        <span className="text-[10px]">
+          {active ? (dir === "asc" ? "▲" : "▼") : ""}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<PublicUser[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("joined");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "joined" ? "desc" : "asc");
+    }
+  }
 
   async function load(next?: string | null) {
     setLoading(true);
@@ -59,6 +102,14 @@ export default function AdminUsersPage() {
       )
     : users;
 
+  const sorted = [...filtered].sort((a, b) => {
+    const cmp =
+      sortKey === "name"
+        ? a.name.localeCompare(b.name)
+        : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -84,16 +135,26 @@ export default function AdminUsersPage() {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
+              <SortHeader
+                label="Name"
+                active={sortKey === "name"}
+                dir={sortDir}
+                onClick={() => toggleSort("name")}
+              />
               <th className="px-4 py-3 font-medium">Email</th>
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Subscription</th>
-              <th className="px-4 py-3 font-medium">Joined</th>
+              <SortHeader
+                label="Joined"
+                active={sortKey === "joined"}
+                dir={sortDir}
+                onClick={() => toggleSort("joined")}
+              />
             </tr>
           </thead>
           <tbody>
-            {filtered.map((u) => (
+            {sorted.map((u) => (
               <tr
                 key={u.userId}
                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
@@ -126,7 +187,7 @@ export default function AdminUsersPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && !loading && (
+            {sorted.length === 0 && !loading && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   No users found.

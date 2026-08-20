@@ -111,6 +111,37 @@ export function AdminUserForm({
     router.refresh();
   }
 
+  // ── Role ─────────────────────────────────────────────────────────
+  const [isAdmin, setIsAdmin] = useState(user.isAdmin === true);
+  const [roleMsg, setRoleMsg] = useState<string | null>(null);
+  const [savingRole, setSavingRole] = useState(false);
+
+  async function toggleRole() {
+    const next = !isAdmin;
+    if (
+      next &&
+      !confirm(
+        `Grant admin access to ${user.name}? They will be able to manage every user account.`
+      )
+    )
+      return;
+    setSavingRole(true);
+    setRoleMsg(null);
+    const res = await fetch(`/api/admin/users/${user.userId}/role`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isAdmin: next }),
+    });
+    setSavingRole(false);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setRoleMsg(data.error ?? "Could not update role");
+      return;
+    }
+    setIsAdmin(next);
+    router.refresh();
+  }
+
   // ── Card ─────────────────────────────────────────────────────────
   const [card, setCard] = useState(initialCard);
   const [confirmingCard, setConfirmingCard] = useState(false);
@@ -280,6 +311,40 @@ export function AdminUserForm({
           }`}
         >
           {savingStatus ? "Saving…" : disabled ? "Enable account" : "Disable account"}
+        </button>
+      </div>
+
+      {/* Role */}
+      <div className={`${cardCls} space-y-3`}>
+        <h2 className="text-sm font-semibold text-slate-900">Admin role</h2>
+        <p className="text-sm text-slate-600">
+          This user is{" "}
+          <span className={isAdmin ? "font-semibold text-brand-700" : "font-semibold text-slate-700"}>
+            {isAdmin ? "an admin" : "a regular member"}
+          </span>
+          .{" "}
+          {isAdmin
+            ? "Admins can view and manage every user account."
+            : "Granting admin access lets them view and manage every user account."}
+        </p>
+        {roleMsg && <p className="text-sm text-red-600">{roleMsg}</p>}
+        {isSelf && isAdmin && (
+          <p className="text-xs text-slate-400">
+            You cannot remove your own admin role.
+          </p>
+        )}
+        <button
+          onClick={toggleRole}
+          disabled={savingRole || (isSelf && isAdmin)}
+          className={`rounded-lg px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 ${
+            isAdmin ? "bg-slate-600 hover:bg-slate-700" : "bg-brand-600 hover:bg-brand-700"
+          }`}
+        >
+          {savingRole
+            ? "Saving…"
+            : isAdmin
+              ? "Revoke admin role"
+              : "Make admin"}
         </button>
       </div>
 
