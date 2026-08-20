@@ -32,8 +32,13 @@ export function SiteHeader() {
 
       {/* Floating nav */}
       <div className="bg-gradient-to-b from-slate-50/95 to-transparent px-4 pb-4 pt-4 backdrop-blur sm:px-6">
-        <nav className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-lg sm:px-6 sm:py-5">
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <nav className="relative mx-auto flex max-w-6xl items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg sm:gap-4 sm:px-6 sm:py-5">
+          {/*
+           * The logo is absolutely centred only from `sm` up, where the bar is
+           * wide enough. On mobile it stays in normal flow so it can never
+           * overlap the icon cluster.
+           */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block">
             <Logo className="pointer-events-auto" markClassName="h-20 w-auto" />
           </div>
 
@@ -42,7 +47,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
             aria-label="Toggle menu"
-            className="grid h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+            className="grid h-11 w-11 flex-none place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
@@ -54,7 +59,11 @@ export function SiteHeader() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 flex-1 justify-center sm:hidden">
+            <Logo markClassName="h-10 w-auto max-w-full object-contain" />
+          </div>
+
+          <div className="flex flex-none items-center gap-1 sm:gap-3">
             <button
               type="button"
               onClick={() => setSearchOpen((v) => !v)}
