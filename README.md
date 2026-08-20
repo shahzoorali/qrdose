@@ -83,8 +83,9 @@ scripts/create-table.ts       one-time DynamoDB provisioning
 1. **DynamoDB** — `npm run create-table` creates table `QRdose` (PK/SK) with
    `GSI1` for email login lookup, in `us-east-1`, pay-per-request.
 2. **IAM** — the credentials need:
-   - `dynamodb:GetItem`, `PutItem`, `UpdateItem`, `DeleteItem`, `Query` on the
-     table and its `GSI1` index.
+   - `dynamodb:GetItem`, `PutItem`, `UpdateItem`, `DeleteItem`, `Query`, `Scan`
+     on the table and its `GSI1` index (`Scan` is required by the admin
+     user list).
    - `sns:Publish`.
 3. **SNS (us-east-1)** — a production SMS account is already in place, so SMS
    can be sent to any valid US number. Confirm the monthly SMS spend limit and,

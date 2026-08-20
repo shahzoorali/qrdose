@@ -6,7 +6,7 @@ import Image from "next/image";
  * cards or section headers — so the page isn't littered with links home.
  */
 export function LogoMark({
-  className = "h-9 w-auto",
+  className = "h-12 w-auto",
   priority = false,
 }: {
   className?: string;
