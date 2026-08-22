@@ -40,15 +40,14 @@ export default function LandingPage() {
 
       {/* Product demo video */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="relative mx-auto w-full max-w-md">
+        <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 shadow-xl">
           <video
-            className="w-full rounded-2xl border border-slate-200 shadow-xl"
+            className="w-full scale-110 object-cover"
             src="/qrdose-flow.mp4"
             autoPlay
             loop
             muted
             playsInline
-            controls
           />
         </div>
       </section>
@@ -58,7 +57,7 @@ export default function LandingPage() {
         <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
           Set it up once.
           <br />
-          Tap it every day.
+          Tap it daily.
         </h2>
         <div className="mt-6 flex justify-center">
           <LogoMark className="h-12 w-auto" />
