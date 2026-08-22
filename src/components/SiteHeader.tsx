@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 const TICKER_TEXT =
-  "QRdose notifies up to 10 contacts all at once, with a single tap or scan  •  No app needed  •  Zero maintenance required  •  $5.99 per user per month";
+  "QRdose notifies up to 10 contacts all at once, with a single tap or scan  •  No app needed  •  Zero maintenance required  •  $5.99 per month";
 
 const MENU_LINKS = [
   { href: "#how", label: "How it works" },
@@ -69,7 +69,7 @@ export function SiteHeader() {
               onClick={() => setSearchOpen((v) => !v)}
               aria-expanded={searchOpen}
               aria-label="Search"
-              className="grid h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+              className="hidden h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 sm:grid"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
@@ -79,7 +79,7 @@ export function SiteHeader() {
             <a
               href="mailto:support@qrdose.com"
               aria-label="Chat with us"
-              className="grid h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+              className="hidden h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 sm:grid"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path
@@ -93,7 +93,7 @@ export function SiteHeader() {
             <Link
               href="/login"
               aria-label="Log in"
-              className="grid h-11 w-11 place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+              className="grid h-11 w-11 flex-none place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />

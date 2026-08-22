@@ -56,7 +56,9 @@ export default function LandingPage() {
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-6 py-20">
         <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
-          Set it up once. Tap it every day.
+          Set it up once.
+          <br />
+          Tap it every day.
         </h2>
         <div className="mt-6 flex justify-center">
           <LogoMark className="h-12 w-auto" />
