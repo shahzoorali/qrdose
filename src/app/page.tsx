@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserPlus, Users, ScanLine, BellRing, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { SiteHeader } from "@/components/SiteHeader";
+import { STRIPE_ENABLED } from "@/lib/env";
 
 export default function LandingPage() {
   return (
@@ -190,16 +191,27 @@ export default function LandingPage() {
             <li>Unlimited notifications</li>
             <li>Notification history &amp; web portal</li>
           </ul>
-          <button
-            disabled
-            className="mt-8 w-full cursor-not-allowed rounded-lg bg-slate-200 px-6 py-3 text-base font-semibold text-slate-500"
-          >
-            Payments coming soon
-          </button>
-          <p className="mt-3 text-center text-xs text-slate-400">
-            Checkout via Stripe is being set up. Create your account now to get
-            ready.
-          </p>
+          {STRIPE_ENABLED ? (
+            <Link
+              href="/signup"
+              className="mt-8 block w-full rounded-lg bg-brand-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-brand-700"
+            >
+              Get started
+            </Link>
+          ) : (
+            <>
+              <button
+                disabled
+                className="mt-8 w-full cursor-not-allowed rounded-lg bg-slate-200 px-6 py-3 text-base font-semibold text-slate-500"
+              >
+                Payments coming soon
+              </button>
+              <p className="mt-3 text-center text-xs text-slate-400">
+                Checkout via Stripe is being set up. Create your account now to
+                get ready.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
