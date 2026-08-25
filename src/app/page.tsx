@@ -182,7 +182,7 @@ export default function LandingPage() {
         <div className="mx-auto mt-12 max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           <h3 className="text-lg font-semibold text-slate-900">QRdose Card</h3>
           <p className="mt-2 text-4xl font-bold text-slate-900">
-            $—<span className="text-base font-medium text-slate-500">/mo</span>
+            $5.99<span className="text-base font-medium text-slate-500">/mo</span>
           </p>
           <ul className="mt-6 space-y-2 text-sm text-slate-600">
             <li>Includes easy tap card with personalized QR code</li>
