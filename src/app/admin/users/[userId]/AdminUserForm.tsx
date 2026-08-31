@@ -142,6 +142,33 @@ export function AdminUserForm({
     router.refresh();
   }
 
+  // ── Billing ──────────────────────────────────────────────────────
+  const [subscriptionStatus, setSubscriptionStatus] = useState(user.subscriptionStatus ?? "none");
+  const [grandfatheredAt, setGrandfatheredAt] = useState(user.grandfatheredAt ?? null);
+  const [billingMsg, setBillingMsg] = useState<string | null>(null);
+  const [savingBilling, setSavingBilling] = useState(false);
+  const isPaid = Boolean(user.stripeCustomerId);
+  const isComped = subscriptionStatus === "active" && !!grandfatheredAt && !isPaid;
+
+  async function toggleComped() {
+    setSavingBilling(true);
+    setBillingMsg(null);
+    const next = !isComped;
+    const res = await fetch(`/api/admin/users/${user.userId}/billing`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grandfathered: next }),
+    });
+    setSavingBilling(false);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setBillingMsg(data.error ?? "Could not update billing");
+      return;
+    }
+    setSubscriptionStatus(next ? "active" : "none");
+    if (next) setGrandfatheredAt(new Date().toISOString());
+  }
+
   // ── Card ─────────────────────────────────────────────────────────
   const [card, setCard] = useState(initialCard);
   const [confirmingCard, setConfirmingCard] = useState(false);
@@ -346,6 +373,63 @@ export function AdminUserForm({
               ? "Revoke admin role"
               : "Make admin"}
         </button>
+      </div>
+
+      {/* Billing */}
+      <div className={`${cardCls} space-y-3`}>
+        <h2 className="text-sm font-semibold text-slate-900">Billing</h2>
+        {isPaid ? (
+          <>
+            <p className="text-sm text-slate-600">
+              Paying customer — subscription is{" "}
+              <span className="font-semibold text-slate-900">{subscriptionStatus}</span>.
+              Managed by Stripe; change plan/cancel there, not here.
+            </p>
+            <a
+              href={`https://dashboard.stripe.com/customers/${user.stripeCustomerId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block text-sm font-semibold text-brand-700 hover:underline"
+            >
+              View customer in Stripe →
+            </a>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-slate-600">
+              {isComped ? (
+                <>
+                  Comped — access granted without a Stripe subscription
+                  {grandfatheredAt && (
+                    <> on {new Date(grandfatheredAt).toLocaleDateString()}</>
+                  )}
+                  .
+                </>
+              ) : (
+                <>
+                  No Stripe subscription. Current status:{" "}
+                  <span className="font-semibold text-slate-900">{subscriptionStatus}</span>.
+                  {subscriptionStatus !== "active" &&
+                    " Their card will not send notifications until they subscribe or you comp them."}
+                </>
+              )}
+            </p>
+            {billingMsg && <p className="text-sm text-red-600">{billingMsg}</p>}
+            <button
+              onClick={toggleComped}
+              disabled={savingBilling}
+              className={`rounded-lg px-5 py-2.5 font-semibold text-white transition disabled:opacity-60 ${
+                isComped ? "bg-slate-600 hover:bg-slate-700" : "bg-brand-600 hover:bg-brand-700"
+              }`}
+            >
+              {savingBilling
+                ? "Saving…"
+                : isComped
+                  ? "Revoke comped access"
+                  : "Grant comped access"}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Card / QR code (admin-only view) */}

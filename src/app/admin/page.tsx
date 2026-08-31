@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatUsPhone } from "@/lib/phone";
+import { MAX_CONTACTS } from "@/lib/env";
 import type { PublicUser } from "@/lib/types";
+
+/** What the admin API sends: a PublicUser plus a couple of cheap per-user
+ *  lookups (contact count, last trigger) that don't live on the user record. */
+type AdminUserRow = PublicUser & {
+  contactCount: number;
+  lastNotifiedAt: string | null;
+};
 
 function StatusBadge({ user }: { user: PublicUser }) {
   const disabled = user.accountStatus === "disabled";
@@ -16,6 +24,38 @@ function StatusBadge({ user }: { user: PublicUser }) {
       }`}
     >
       {disabled ? "Disabled" : "Active"}
+    </span>
+  );
+}
+
+/** Subscription status alone no longer says who's actually paying — a
+ *  "Comped" account also reads as "active". Split it into what matters. */
+function PlanBadge({ user }: { user: PublicUser }) {
+  const status = user.subscriptionStatus ?? "none";
+  const isLive = status === "active" || status === "trialing";
+
+  let label: string;
+  let classes: string;
+  if (isLive && user.stripeCustomerId) {
+    label = "Paid";
+    classes = "bg-green-50 text-green-700";
+  } else if (isLive && user.grandfatheredAt) {
+    label = "Comped";
+    classes = "bg-blue-50 text-blue-700";
+  } else if (status === "past_due") {
+    label = "Past due";
+    classes = "bg-amber-50 text-amber-700";
+  } else if (status === "canceled") {
+    label = "Canceled";
+    classes = "bg-slate-100 text-slate-600";
+  } else {
+    label = "Inactive";
+    classes = "bg-slate-100 text-slate-500";
+  }
+
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${classes}`}>
+      {label}
     </span>
   );
 }
@@ -53,7 +93,7 @@ function SortHeader({
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<PublicUser[]>([]);
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +184,9 @@ export default function AdminUsersPage() {
               <th className="px-4 py-3 font-medium">Email</th>
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Subscription</th>
+              <th className="px-4 py-3 font-medium">Plan</th>
+              <th className="px-4 py-3 font-medium">Contacts</th>
+              <th className="px-4 py-3 font-medium">Last notified</th>
               <SortHeader
                 label="Joined"
                 active={sortKey === "joined"}
@@ -179,8 +221,16 @@ export default function AdminUsersPage() {
                 <td className="px-4 py-3">
                   <StatusBadge user={u} />
                 </td>
+                <td className="px-4 py-3">
+                  <PlanBadge user={u} />
+                </td>
                 <td className="px-4 py-3 text-slate-500">
-                  {u.subscriptionStatus ?? "none"}
+                  {u.contactCount}/{MAX_CONTACTS}
+                </td>
+                <td className="px-4 py-3 text-slate-500">
+                  {u.lastNotifiedAt
+                    ? new Date(u.lastNotifiedAt).toLocaleDateString()
+                    : "Never"}
                 </td>
                 <td className="px-4 py-3 text-slate-500">
                   {new Date(u.createdAt).toLocaleDateString()}
@@ -189,7 +239,7 @@ export default function AdminUsersPage() {
             ))}
             {sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                   No users found.
                 </td>
               </tr>

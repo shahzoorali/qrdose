@@ -237,6 +237,36 @@ export async function updateSubscription(
   );
 }
 
+/**
+ * Grant or revoke comped (Stripe-free) access. Only touches accounts that
+ * have no `stripeCustomerId` — a real paying customer's status is owned by
+ * the Stripe webhook, and flipping it here would go stale the moment their
+ * subscription next changes. Revoking leaves `grandfatheredAt` in place as a
+ * historical record; only `subscriptionStatus` reverts.
+ */
+export async function setGrandfathered(
+  userId: string,
+  grandfathered: boolean
+): Promise<void> {
+  const sets = ["subscriptionStatus = :s"];
+  const values: Record<string, unknown> = {
+    ":s": grandfathered ? "active" : "none",
+  };
+  if (grandfathered) {
+    sets.push("grandfatheredAt = :g");
+    values[":g"] = new Date().toISOString();
+  }
+  await docClient.send(
+    new UpdateCommand({
+      TableName: TABLE,
+      Key: { PK: pkUser(userId), SK: skProfile() },
+      ConditionExpression: "attribute_not_exists(stripeCustomerId)",
+      UpdateExpression: `SET ${sets.join(", ")}`,
+      ExpressionAttributeValues: values,
+    })
+  );
+}
+
 // ── Admin operations ────────────────────────────────────────────────
 
 /**
