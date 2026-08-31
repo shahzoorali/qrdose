@@ -74,6 +74,10 @@ export const adminRoleSchema = z.object({
   isAdmin: z.boolean(),
 });
 
+export const adminBillingSchema = z.object({
+  grandfathered: z.boolean(),
+});
+
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type ContactInput = z.infer<typeof contactSchema>;

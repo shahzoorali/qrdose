@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentAdmin } from "@/lib/admin";
 import { listAllUsers } from "@/lib/repositories/users";
+import { countContacts } from "@/lib/repositories/contacts";
+import { listTriggers } from "@/lib/repositories/history";
 import { toPublicUser } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -27,5 +29,21 @@ export async function GET(req: Request) {
     ? Buffer.from(JSON.stringify(lastKey)).toString("base64")
     : null;
 
-  return NextResponse.json({ users: users.map(toPublicUser), cursor });
+  // Per-user extras for the admin table. Each is a single indexed Query
+  // (not a Scan), so this is cheap even at the 100-per-page ceiling above.
+  const rows = await Promise.all(
+    users.map(async (u) => {
+      const [contactCount, lastTriggers] = await Promise.all([
+        countContacts(u.userId),
+        listTriggers(u.userId, 1),
+      ]);
+      return {
+        ...toPublicUser(u),
+        contactCount,
+        lastNotifiedAt: lastTriggers[0]?.timestamp ?? null,
+      };
+    })
+  );
+
+  return NextResponse.json({ users: rows, cursor });
 }

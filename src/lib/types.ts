@@ -18,6 +18,9 @@ export interface User {
   // Billing (Stripe). Optional so existing records remain valid.
   stripeCustomerId?: string;
   subscriptionStatus?: SubscriptionStatus;
+  /** ISO instant an admin manually granted access without a Stripe
+   *  subscription (e.g. house/friends-and-family accounts). */
+  grandfatheredAt?: string;
   // Mailing address (US). Optional so existing records remain valid.
   address?: string;
   city?: string;
