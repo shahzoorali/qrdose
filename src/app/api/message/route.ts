@@ -18,6 +18,10 @@ export async function PUT(req: Request) {
     );
   }
 
-  await updateNotificationMessage(userId, parsed.data.notificationMessage);
+  await updateNotificationMessage(
+    userId,
+    parsed.data.notificationMessage,
+    parsed.data.quickPhrases
+  );
   return NextResponse.json({ ok: true });
 }

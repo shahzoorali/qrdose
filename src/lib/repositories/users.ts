@@ -101,14 +101,15 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
 export async function updateNotificationMessage(
   userId: string,
-  notificationMessage: string
+  notificationMessage: string,
+  quickPhrases?: string[]
 ): Promise<void> {
   await docClient.send(
     new UpdateCommand({
       TableName: TABLE,
       Key: { PK: pkUser(userId), SK: skProfile() },
-      UpdateExpression: "SET notificationMessage = :m",
-      ExpressionAttributeValues: { ":m": notificationMessage },
+      UpdateExpression: "SET notificationMessage = :m, quickPhrases = :q",
+      ExpressionAttributeValues: { ":m": notificationMessage, ":q": quickPhrases ?? [] },
     })
   );
 }

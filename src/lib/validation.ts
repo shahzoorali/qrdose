@@ -45,6 +45,10 @@ export const messageSchema = z.object({
     .trim()
     .min(1, "Message is required")
     .max(280, "Keep it under 280 characters"),
+  quickPhrases: z
+    .array(z.string().trim().min(1).max(40, "Keep each add-in under 40 characters"))
+    .max(5, "Up to 5 quick add-ins")
+    .optional(),
 });
 
 export const settingsSchema = z.object({
