@@ -60,6 +60,32 @@ export async function putContact(
   await docClient.send(new PutCommand({ TableName: TABLE, Item: item }));
 }
 
+export interface MaskedContact {
+  contactId: string;
+  displayName: string;
+}
+
+/** First name + last-initial only, e.g. "Carol R." — safe to show on the
+ *  public scan page without exposing a contact's full name or phone number. */
+function maskName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Contact";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+}
+
+/** Masked contact list for the public trigger page — no phone numbers, no
+ *  full last names. */
+export async function listContactsMasked(
+  userId: string
+): Promise<MaskedContact[]> {
+  const contacts = await listContacts(userId);
+  return contacts.map((c) => ({
+    contactId: c.contactId,
+    displayName: maskName(c.name),
+  }));
+}
+
 export async function deleteContact(
   userId: string,
   contactId: string

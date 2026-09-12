@@ -1,7 +1,8 @@
-import { Logo } from "@/components/Logo";
+import { LogoMark } from "@/components/Logo";
 import { TriggerButton } from "@/components/TriggerButton";
 import { resolveCard } from "@/lib/repositories/cards";
 import { getUserById } from "@/lib/repositories/users";
+import { listContactsMasked } from "@/lib/repositories/contacts";
 
 export default async function TriggerPage({
   params,
@@ -11,10 +12,11 @@ export default async function TriggerPage({
   const { cardId } = await params;
   const userId = await resolveCard(cardId);
   const user = userId ? await getUserById(userId) : null;
+  const contacts = userId ? await listContactsMasked(userId) : [];
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-brand-50 to-slate-50 px-6 py-12">
-      <Logo className="mb-8" />
+      <LogoMark className="mb-8 h-20 w-auto sm:h-24" priority />
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         {!user ? (
           <div className="text-center">
@@ -35,7 +37,11 @@ export default async function TriggerPage({
               &ldquo;{user.notificationMessage} at [time].&rdquo;
             </p>
             <div className="mt-8">
-              <TriggerButton cardId={cardId} />
+              <TriggerButton
+                cardId={cardId}
+                contacts={contacts}
+                quickPhrases={user.quickPhrases ?? []}
+              />
             </div>
           </>
         )}

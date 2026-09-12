@@ -12,8 +12,37 @@ import { markDosesTakenNearby } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 
+const MAX_ADDITIONAL_TEXT = 60;
+
+/**
+ * Clean up scanner-supplied "additional text" before it goes anywhere near
+ * an SMS body. This field is filled in by an anonymous, unauthenticated
+ * visitor to a public page, so it's treated as hostile input: strip links
+ * (no phishing via a "medication alert"), strip markup, collapse whitespace,
+ * and hard-cap the length.
+ */
+function sanitizeAdditionalText(input: unknown): string {
+  if (typeof input !== "string") return "";
+  let text = input
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/www\.\S+/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length > MAX_ADDITIONAL_TEXT) {
+    text = text.slice(0, MAX_ADDITIONAL_TEXT).trim();
+  }
+  return text;
+}
+
 /** "Carol has taken her medication" -> "This message is from QRdose. ...at 2:34 PM on Jun 30, 2026." */
-function formatMessage(base: string, timezone: string, when: Date): string {
+function formatMessage(
+  base: string,
+  additionalText: string,
+  timezone: string,
+  when: Date
+): string {
   const dateTime = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -22,7 +51,18 @@ function formatMessage(base: string, timezone: string, when: Date): string {
     year: "numeric",
     timeZone: timezone || "America/Chicago",
   }).format(when);
-  return `This message is from QRdose. ${base} at ${dateTime}.`;
+  const note = additionalText ? ` (${additionalText})` : "";
+  return `This message is from QRdose. ${base}${note} at ${dateTime}.`;
+}
+
+/** One line of streamed progress as each contact is dispatched. */
+type ProgressLine =
+  | { contactId: string; ok: true }
+  | { contactId: string; ok: false }
+  | { done: true; successCount: number; recipientCount: number };
+
+function line(data: ProgressLine): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(data) + "\n");
 }
 
 export async function POST(
@@ -85,53 +125,70 @@ export async function POST(
     );
   }
 
-  const now = new Date();
-  const body = formatMessage(user.notificationMessage, user.timezone, now);
-
-  const results = await Promise.allSettled(
-    contacts.map((c) => sendSms(c.phone, body))
+  const body = await req.json().catch(() => ({}));
+  const additionalText = sanitizeAdditionalText(
+    (body as { additionalText?: unknown }).additionalText
   );
-  results.forEach((r, i) => {
-    if (r.status === "rejected") {
-      console.error(`SMS send failed for ${contacts[i]?.phone}:`, r.reason);
-    }
+
+  const now = new Date();
+  const message = formatMessage(user.notificationMessage, additionalText, user.timezone, now);
+
+  // Stream one line of progress per contact as they're dispatched, in order,
+  // so the scan page can check names off one-by-one instead of a single
+  // all-or-nothing spinner.
+  let successCount = 0;
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      for (const contact of contacts) {
+        try {
+          await sendSms(contact.phone, message);
+          successCount++;
+          controller.enqueue(line({ contactId: contact.contactId, ok: true }));
+        } catch (err) {
+          console.error(`SMS send failed for ${contact.phone}:`, err);
+          controller.enqueue(line({ contactId: contact.contactId, ok: false }));
+        }
+      }
+
+      // Optional self-receipt to the account owner.
+      if (user.phone) {
+        await sendSms(
+          user.phone,
+          `Receipt: your ${successCount} contact(s) were notified — "${message}"`
+        ).catch(() => {
+          /* receipt is best-effort; ignore failures */
+        });
+      }
+
+      const status: TriggerLog["status"] =
+        successCount === contacts.length
+          ? "sent"
+          : successCount === 0
+            ? "failed"
+            : "partial";
+
+      await recordTrigger(userId, {
+        timestamp: now.toISOString(),
+        recipientCount: contacts.length,
+        successCount,
+        status,
+      });
+
+      // A scan is the user confirming they took their medication — clear any
+      // doses scheduled around now so reminders don't fire for them.
+      await markDosesTakenNearby(user, now);
+
+      controller.enqueue(
+        line({ done: true, successCount, recipientCount: contacts.length })
+      );
+      controller.close();
+    },
   });
-  const successCount = results.filter((r) => r.status === "fulfilled").length;
 
-  // Optional self-receipt to the account owner.
-  if (user.phone) {
-    await sendSms(
-      user.phone,
-      `Receipt: your ${successCount} contact(s) were notified — "${body}"`
-    ).catch(() => {
-      /* receipt is best-effort; ignore failures */
-    });
-  }
-
-  const status: TriggerLog["status"] =
-    successCount === contacts.length
-      ? "sent"
-      : successCount === 0
-        ? "failed"
-        : "partial";
-
-  await recordTrigger(userId, {
-    timestamp: now.toISOString(),
-    recipientCount: contacts.length,
-    successCount,
-    status,
+  return new NextResponse(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
   });
-
-  // A scan is the user confirming they took their medication — clear any
-  // doses scheduled around now so reminders don't fire for them.
-  await markDosesTakenNearby(user, now);
-
-  if (successCount === 0) {
-    return NextResponse.json(
-      { error: "Could not send notifications. Please try again." },
-      { status: 502 }
-    );
-  }
-
-  return NextResponse.json({ ok: true, recipientCount: successCount });
 }

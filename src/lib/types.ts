@@ -12,6 +12,9 @@ export interface User {
   name: string;
   phone: string; // E.164
   notificationMessage: string;
+  /** Optional canned add-ins the scanner can attach to the message before
+   *  sending (e.g. "Running late", "Took a double dose"). */
+  quickPhrases?: string[];
   cardId: string;
   timezone: string; // IANA, e.g. America/Chicago
   createdAt: string; // ISO
