@@ -46,6 +46,12 @@ export const DOSE_MATCH_WINDOW_MINUTES = Number(
   process.env.DOSE_MATCH_WINDOW_MINUTES || "180"
 );
 
+// ── Printed card ────────────────────────────────────────────────────
+/** Support contacts printed in the card footer. */
+export const SUPPORT_EMAIL =
+  process.env.SUPPORT_EMAIL || "Support@QRDOSE.COM";
+export const SUPPORT_PHONE = process.env.SUPPORT_PHONE || "630-601-8185";
+
 /** Verified SES sender, e.g. "QRdose <alerts@qrdose.com>". Empty disables email. */
 export const SES_FROM_EMAIL = process.env.SES_FROM_EMAIL || "";
 

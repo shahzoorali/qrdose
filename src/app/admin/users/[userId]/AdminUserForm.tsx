@@ -438,7 +438,7 @@ export function AdminUserForm({
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <p className="text-sm font-medium text-slate-700">Printable card</p>
           <p className="mt-1 text-xs text-slate-500">
-            Full card design at 3.375&quot; × 2.125&quot; (standard CR80 size),
+            Full card design at 2.125&quot; × 3.375&quot; (CR80 stock, portrait),
             300dpi, no bleed — ready to send to a print shop.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-4">
@@ -446,7 +446,7 @@ export function AdminUserForm({
             <img
               src={`/api/admin/users/${user.userId}/card/print?format=png`}
               alt={`Printable card preview for ${user.name}`}
-              className="h-32 w-auto rounded-lg border border-slate-200 shadow-sm"
+              className="h-48 w-auto rounded-lg border border-slate-200 shadow-sm"
             />
             <div className="flex flex-col gap-2">
               <a
