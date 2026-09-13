@@ -1,10 +1,27 @@
-import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
+import { createCanvas, loadImage, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
 import path from "node:path";
 import { qrDataUrl } from "./qrcode";
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from "./env";
 
 const LOGO_PATH = path.join(process.cwd(), "public", "qrdose-logo.svg");
+
+/**
+ * A minimal production image (e.g. node:20-alpine, what this app ships in)
+ * has no fonts installed at all, so @napi-rs/canvas has nothing to shape
+ * text with — every fillText silently draws nothing, leaving only shapes
+ * and images. Bundling and registering our own font makes text rendering
+ * independent of whatever (if anything) the host has installed.
+ */
+const FONT_PATH = path.join(process.cwd(), "public", "fonts", "Inter-Variable.ttf");
+const FONT_FAMILY = "QRdoseCardSans";
+let fontRegistered = false;
+
+function ensureFontRegistered(): void {
+  if (fontRegistered) return;
+  GlobalFonts.registerFromPath(FONT_PATH, FONT_FAMILY);
+  fontRegistered = true;
+}
 
 /**
  * Physical card: CR80 stock printed in portrait, 2.125in wide x 3.375in tall,
@@ -50,10 +67,10 @@ function fitFont(
 ): string {
   let px = size;
   for (; px > 8; px--) {
-    ctx.font = `${weight} ${px}px sans-serif`;
+    ctx.font = `${weight} ${px}px ${FONT_FAMILY}`;
     if (ctx.measureText(text).width <= maxWidth) break;
   }
-  return `${weight} ${px}px sans-serif`;
+  return `${weight} ${px}px ${FONT_FAMILY}`;
 }
 
 /** Center-wrap text within maxWidth, one word at a time, top-anchored at y. */
@@ -102,6 +119,7 @@ function drawNfcArcs(ctx: SKRSContext2D, x: number, y: number, scale: number) {
  * support footer — the layout of the printed card.
  */
 async function renderCardPng(cardId: string): Promise<Buffer> {
+  ensureFontRegistered();
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
   ctx.textAlign = "center";
@@ -149,7 +167,7 @@ async function renderCardPng(cardId: string): Promise<Buffer> {
   // ── Scan instruction ─────────────────────────────────────────────
   y += 0.117 * DPI;
   ctx.fillStyle = BRAND_TEAL;
-  ctx.font = `700 ${Math.round(0.095 * DPI)}px sans-serif`;
+  ctx.font = `700 ${Math.round(0.095 * DPI)}px ${FONT_FAMILY}`;
   wrapText(
     ctx,
     "USE ANY SMART PHONE TO SCAN THE QR CODE OR TAP",
