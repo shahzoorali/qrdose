@@ -1,7 +1,10 @@
 import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
+import path from "node:path";
 import { qrDataUrl } from "./qrcode";
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from "./env";
+
+const LOGO_PATH = path.join(process.cwd(), "public", "qrdose-logo.svg");
 
 /**
  * Physical card: CR80 stock printed in portrait, 2.125in wide x 3.375in tall,
@@ -14,9 +17,10 @@ const CARD_H_IN = 3.375;
 const W = Math.round(CARD_W_IN * DPI); // 637px
 const H = Math.round(CARD_H_IN * DPI); // 1012px
 
-const BRAND_BLUE = "#1a4f9c"; // wordmark, capsule left half, id text
-const BRAND_TEAL = "#35a093"; // border, capsule right half, teal copy
-const DIVIDER = "#2a5ca8";
+// Matches public/qrdose-logo.svg exactly (capsule halves + wordmark fill).
+const BRAND_BLUE = "#1B5288"; // id text, dividers
+const BRAND_TEAL = "#3FB27F"; // border, teal copy
+const DIVIDER = "#1B5288";
 const BORDER = Math.round(0.11 * DPI); // ~33px frame, ~5% of card width
 
 function roundRect(
@@ -77,55 +81,6 @@ function wrapText(
   lines.forEach((l, i) => ctx.fillText(l, cx, y + i * lineHeight));
 }
 
-/** The small white QR glyph sitting inside the capsule's blue half. */
-function drawQrGlyph(
-  ctx: SKRSContext2D,
-  x: number,
-  y: number,
-  size: number,
-  color: string
-) {
-  const modules = 7;
-  const m = size / modules;
-  const grid: number[][] = Array.from({ length: modules }, () =>
-    Array(modules).fill(0)
-  );
-  // Finder squares at three corners, as on a real QR code.
-  const finders = [
-    [0, 0],
-    [4, 0],
-    [0, 4],
-  ];
-  for (const [fx, fy] of finders) {
-    for (let dy = 0; dy < 3; dy++) {
-      for (let dx = 0; dx < 3; dx++) {
-        // Hollow centre, like a finder pattern's ring.
-        grid[fy + dy][fx + dx] = dx === 1 && dy === 1 ? 0 : 1;
-      }
-    }
-  }
-  // A handful of data modules so it reads as a code, not a logo.
-  for (const [dx, dy] of [
-    [4, 4],
-    [6, 4],
-    [5, 5],
-    [4, 6],
-    [6, 6],
-    [3, 3],
-    [3, 1],
-    [1, 3],
-  ]) {
-    grid[dy][dx] = 1;
-  }
-
-  ctx.fillStyle = color;
-  for (let gy = 0; gy < modules; gy++) {
-    for (let gx = 0; gx < modules; gx++) {
-      if (grid[gy][gx]) ctx.fillRect(x + gx * m, y + gy * m, m * 1.02, m * 1.02);
-    }
-  }
-}
-
 /** The NFC "tap" arcs printed beside the card id. */
 function drawNfcArcs(ctx: SKRSContext2D, x: number, y: number, scale: number) {
   ctx.strokeStyle = "#111827";
@@ -164,40 +119,15 @@ async function renderCardPng(cardId: string): Promise<Buffer> {
   const pad = BORDER + 0.09 * DPI;
   const contentW = W - pad * 2;
 
-  // ── Capsule logomark ─────────────────────────────────────────────
-  const pillW = contentW * 0.52;
-  const pillH = pillW * 0.39;
-  const pillX = cx - pillW / 2;
-  const pillY = BORDER + 0.055 * DPI;
-
-  roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.fill();
-  // Blue left half, clipped to the capsule so the rounded end is kept.
-  ctx.save();
-  roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
-  ctx.clip();
-  ctx.fillStyle = BRAND_BLUE;
-  ctx.fillRect(pillX, pillY, pillW * 0.52, pillH);
-  ctx.restore();
-
-  const glyph = pillH * 0.62;
-  drawQrGlyph(
-    ctx,
-    pillX + pillW * 0.26 - glyph / 2,
-    pillY + pillH / 2 - glyph / 2,
-    glyph,
-    "#ffffff"
-  );
-
-  // ── Wordmark ─────────────────────────────────────────────────────
-  let y = pillY + pillH + 0.20 * DPI;
-  ctx.fillStyle = BRAND_BLUE;
-  ctx.font = fitFont(ctx, "QRdose", contentW, Math.round(0.30 * DPI), 800);
-  ctx.fillText("QRdose", cx, y);
+  // ── Logo (capsule + real QR + wordmark, as one asset) ────────────
+  const logoImg = await loadImage(LOGO_PATH);
+  const logoW = contentW * 0.86;
+  const logoH = logoW * (logoImg.height / logoImg.width);
+  const logoY = BORDER + 0.08 * DPI;
+  ctx.drawImage(logoImg, cx - logoW / 2, logoY, logoW, logoH);
 
   // ── Subtitle ─────────────────────────────────────────────────────
-  y += 0.235 * DPI;
+  let y = logoY + logoH + 0.09 * DPI;
   ctx.fillStyle = BRAND_TEAL;
   ctx.font = fitFont(
     ctx,
