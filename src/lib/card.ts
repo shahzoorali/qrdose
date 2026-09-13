@@ -1,20 +1,27 @@
 import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
 import { PDFDocument } from "pdf-lib";
+import path from "node:path";
 import { qrDataUrl } from "./qrcode";
+import { SUPPORT_EMAIL, SUPPORT_PHONE } from "./env";
+
+const LOGO_PATH = path.join(process.cwd(), "public", "qrdose-logo.svg");
 
 /**
- * Physical card dimensions: standard CR80 size, 3.375in x 2.125in.
- * Rendered at 300dpi so the PNG/PDF are print-ready without upscaling.
+ * Physical card: CR80 stock printed in portrait, 2.125in wide x 3.375in tall,
+ * matching the existing printed QRdose card. Rendered at 300dpi so the PNG
+ * and PDF are print-ready without upscaling.
  */
 const DPI = 300;
-const CARD_W_IN = 3.375;
-const CARD_H_IN = 2.125;
-const W = Math.round(CARD_W_IN * DPI); // 1012px
-const H = Math.round(CARD_H_IN * DPI); // 637px
+const CARD_W_IN = 2.125;
+const CARD_H_IN = 3.375;
+const W = Math.round(CARD_W_IN * DPI); // 637px
+const H = Math.round(CARD_H_IN * DPI); // 1012px
 
-const BRAND_NAVY = "#1e3a5f";
-const BRAND_TEAL = "#2f9e8f";
-const BORDER = Math.round(0.12 * DPI); // ~36px teal border, matches sample
+// Matches public/qrdose-logo.svg exactly (capsule halves + wordmark fill).
+const BRAND_BLUE = "#1B5288"; // id text, dividers
+const BRAND_TEAL = "#3FB27F"; // border, teal copy
+const DIVIDER = "#1B5288";
+const BORDER = Math.round(0.11 * DPI); // ~33px frame, ~5% of card width
 
 function roundRect(
   ctx: SKRSContext2D,
@@ -33,112 +40,20 @@ function roundRect(
   ctx.closePath();
 }
 
-/**
- * Draw the full card face onto a fresh canvas and return it as a PNG buffer.
- *
- * Laid out in two columns to fit the standard CR80 landscape proportions
- * (3.375in x 2.125in) — QR + card id on the left, wordmark and instructions
- * on the right — rather than stacking everything vertically, which the
- * short card height can't hold.
- */
-async function renderCardPng(cardId: string): Promise<Buffer> {
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext("2d");
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  const radius = Math.round(0.12 * DPI);
-
-  // Teal border, white face.
-  roundRect(ctx, 0, 0, W, H, radius);
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.fill();
-  roundRect(ctx, BORDER, BORDER, W - BORDER * 2, H - BORDER * 2, radius * 0.6);
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
-
-  const innerX = BORDER + 0.1 * DPI;
-  const innerY = BORDER + 0.08 * DPI;
-  const innerW = W - 2 * (BORDER + 0.1 * DPI);
-  const innerH = H - 2 * (BORDER + 0.08 * DPI);
-
-  const leftW = innerW * 0.36;
-  const leftCx = innerX + leftW / 2;
-  const rightX = innerX + leftW + 0.12 * DPI;
-  const rightCx = rightX + (innerW - leftW - 0.12 * DPI) / 2;
-
-  // ── Left column: QR code + card id ──────────────────────────────
-  const qrSize = leftW * 0.92;
-  const qrUrl = await qrDataUrl(cardId);
-  const qrImg = await loadImage(qrUrl);
-  const qrY = innerY + 0.06 * DPI;
-  ctx.drawImage(qrImg, leftCx - qrSize / 2, qrY, qrSize, qrSize);
-
-  const idY = qrY + qrSize + 0.16 * DPI;
-  ctx.fillStyle = BRAND_NAVY;
-  ctx.font = `600 ${Math.round(0.062 * DPI)}px sans-serif`;
-  ctx.fillText(`ID: ${cardId}`, leftCx, idY);
-
-  // ── Right column: wordmark, subtitle, instructions, footer ──────
-  let y = innerY + 0.16 * DPI;
-
-  // Capsule icon beside a compact wordmark.
-  const pillH = 0.22 * DPI;
-  const pillW = pillH * 2.1;
-  const wordFont = `800 ${Math.round(0.22 * DPI)}px sans-serif`;
-  ctx.font = wordFont;
-  const wordWidth = ctx.measureText("QRdose").width;
-  const groupWidth = pillW + 0.06 * DPI + wordWidth;
-  const groupX = rightCx - groupWidth / 2;
-
-  const pillX = groupX;
-  const pillY = y - pillH / 2;
-  roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
-  ctx.fillStyle = "#e8f4f2";
-  ctx.fill();
-  roundRect(ctx, pillX + pillW / 2, pillY, pillW / 2, pillH, pillH / 2);
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.fill();
-
-  ctx.fillStyle = BRAND_NAVY;
-  ctx.font = wordFont;
-  ctx.textAlign = "left";
-  ctx.fillText("QRdose", pillX + pillW + 0.06 * DPI, y);
-  ctx.textAlign = "center";
-
-  y += 0.19 * DPI;
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.font = `700 ${Math.round(0.068 * DPI)}px sans-serif`;
-  ctx.fillText("MEDICATION ALERT NETWORK", rightCx, y);
-
-  y += 0.1 * DPI;
-  ctx.strokeStyle = "#c9dede";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(rightX, y);
-  ctx.lineTo(rightX + (innerW - leftW - 0.12 * DPI), y);
-  ctx.stroke();
-
-  y += 0.15 * DPI;
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.font = `700 ${Math.round(0.058 * DPI)}px sans-serif`;
-  const instructionW = innerW - leftW - 0.12 * DPI;
-  wrapText(
-    ctx,
-    "USE ANY SMART PHONE TO SCAN THE QR CODE OR TAP",
-    rightCx,
-    y,
-    instructionW,
-    0.078 * DPI
-  );
-
-  // Footer, pinned to the bottom of the right column.
-  const footerY = innerY + innerH - 0.08 * DPI;
-  ctx.fillStyle = BRAND_TEAL;
-  ctx.font = `700 ${Math.round(0.052 * DPI)}px sans-serif`;
-  ctx.fillText("SUPPORT@QRDOSE.COM", rightCx, footerY);
-
-  return canvas.toBuffer("image/png");
+/** Shrink `size` until `text` fits `maxWidth`, then return the font string. */
+function fitFont(
+  ctx: SKRSContext2D,
+  text: string,
+  maxWidth: number,
+  size: number,
+  weight = 700
+): string {
+  let px = size;
+  for (; px > 8; px--) {
+    ctx.font = `${weight} ${px}px sans-serif`;
+    if (ctx.measureText(text).width <= maxWidth) break;
+  }
+  return `${weight} ${px}px sans-serif`;
 }
 
 /** Center-wrap text within maxWidth, one word at a time, top-anchored at y. */
@@ -166,14 +81,134 @@ function wrapText(
   lines.forEach((l, i) => ctx.fillText(l, cx, y + i * lineHeight));
 }
 
+/** The NFC "tap" arcs printed beside the card id. */
+function drawNfcArcs(ctx: SKRSContext2D, x: number, y: number, scale: number) {
+  ctx.strokeStyle = "#111827";
+  ctx.lineCap = "round";
+  for (let i = 1; i <= 3; i++) {
+    ctx.lineWidth = 4 * scale;
+    ctx.beginPath();
+    ctx.arc(x, y, i * 11 * scale, -Math.PI / 3.2, Math.PI / 3.2);
+    ctx.stroke();
+  }
+}
+
+/**
+ * Draw the card face onto a fresh canvas and return it as a PNG buffer.
+ *
+ * Single centred column, top to bottom: capsule logomark, QRdose wordmark,
+ * network subtitle, rule, scan instruction, the QR code as the visual
+ * anchor, the card id in a bordered box beside the NFC arcs, and the
+ * support footer — the layout of the printed card.
+ */
+async function renderCardPng(cardId: string): Promise<Buffer> {
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext("2d");
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // Teal frame, white face.
+  roundRect(ctx, 0, 0, W, H, 0.14 * DPI);
+  ctx.fillStyle = BRAND_TEAL;
+  ctx.fill();
+  roundRect(ctx, BORDER, BORDER, W - BORDER * 2, H - BORDER * 2, 0.09 * DPI);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+
+  const cx = W / 2;
+  const pad = BORDER + 0.09 * DPI;
+  const contentW = W - pad * 2;
+
+  // ── Logo (capsule + real QR + wordmark, as one asset) ────────────
+  const logoImg = await loadImage(LOGO_PATH);
+  const logoW = contentW * 0.86;
+  const logoH = logoW * (logoImg.height / logoImg.width);
+  const logoY = BORDER + 0.08 * DPI;
+  ctx.drawImage(logoImg, cx - logoW / 2, logoY, logoW, logoH);
+
+  // ── Subtitle ─────────────────────────────────────────────────────
+  let y = logoY + logoH + 0.09 * DPI;
+  ctx.fillStyle = BRAND_TEAL;
+  ctx.font = fitFont(
+    ctx,
+    "MEDICATION ALERT NETWORK",
+    contentW,
+    Math.round(0.107 * DPI)
+  );
+  ctx.fillText("MEDICATION ALERT NETWORK", cx, y);
+
+  // ── Rule ─────────────────────────────────────────────────────────
+  y += 0.10 * DPI;
+  ctx.strokeStyle = DIVIDER;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad, y);
+  ctx.lineTo(W - pad, y);
+  ctx.stroke();
+
+  // ── Scan instruction ─────────────────────────────────────────────
+  y += 0.117 * DPI;
+  ctx.fillStyle = BRAND_TEAL;
+  ctx.font = `700 ${Math.round(0.095 * DPI)}px sans-serif`;
+  wrapText(
+    ctx,
+    "USE ANY SMART PHONE TO SCAN THE QR CODE OR TAP",
+    cx,
+    y,
+    contentW,
+    0.12 * DPI
+  );
+
+  // ── QR code: the anchor of the card ──────────────────────────────
+  const qrSize = contentW * 0.91;
+  const qrY = y + 0.183 * DPI;
+  const qrImg = await loadImage(await qrDataUrl(cardId));
+  ctx.drawImage(qrImg, cx - qrSize / 2, qrY, qrSize, qrSize);
+
+  // ── Card id box + NFC arcs ───────────────────────────────────────
+  const boxH = 0.185 * DPI;
+  const boxW = contentW * 0.8;
+  const boxX = pad;
+  const boxY = qrY + qrSize + 0.033 * DPI;
+  ctx.strokeStyle = DIVIDER;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  ctx.fillStyle = BRAND_BLUE;
+  ctx.font = fitFont(
+    ctx,
+    `ID: ${cardId}`,
+    boxW - 0.08 * DPI,
+    Math.round(0.095 * DPI),
+    600
+  );
+  ctx.fillText(`ID: ${cardId}`, boxX + boxW / 2, boxY + boxH / 2);
+
+  drawNfcArcs(
+    ctx,
+    boxX + boxW + (contentW - boxW) * 0.35,
+    boxY + boxH / 2,
+    DPI / 300
+  );
+
+  // ── Support footer ───────────────────────────────────────────────
+  const footer = SUPPORT_PHONE
+    ? `CONTACT US: ${SUPPORT_EMAIL} OR ${SUPPORT_PHONE}`
+    : `CONTACT US: ${SUPPORT_EMAIL}`;
+  ctx.fillStyle = BRAND_TEAL;
+  ctx.font = fitFont(ctx, footer, W - BORDER * 2 - 0.06 * DPI, Math.round(0.08 * DPI));
+  ctx.fillText(footer, cx, H - BORDER - 0.035 * DPI);
+
+  return canvas.toBuffer("image/png");
+}
+
 /** PNG preview of the printable card, at 300dpi. */
 export async function cardPngBuffer(cardId: string): Promise<Buffer> {
   return renderCardPng(cardId);
 }
 
 /**
- * Print-ready PDF: a single page sized exactly 3.375in x 2.125in (no bleed),
- * the card face filling the full page so it prints edge-to-edge at 1:1 scale.
+ * Print-ready PDF: a single page sized exactly 2.125in x 3.375in (no bleed),
+ * the card face filling the full page so it prints at 1:1 scale.
  */
 export async function cardPdfBuffer(cardId: string): Promise<Buffer> {
   const png = await renderCardPng(cardId);
