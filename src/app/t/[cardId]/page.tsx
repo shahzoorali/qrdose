@@ -15,8 +15,8 @@ export default async function TriggerPage({
   const contacts = userId ? await listContactsMasked(userId) : [];
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-brand-50 to-slate-50 px-6 py-12">
-      <LogoMark className="mb-8 h-20 w-auto sm:h-24" priority />
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-brand-50 to-slate-50 px-6 py-12">
+      <LogoMark className="mb-8 h-48 w-auto" priority />
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         {!user ? (
           <div className="text-center">
