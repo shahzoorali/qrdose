@@ -65,6 +65,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
+      logoClassName="h-48 w-auto max-w-full"
       footer={
         <>
           Need an account?{" "}
