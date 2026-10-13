@@ -8,6 +8,7 @@ import {
   putMedication,
 } from "@/lib/repositories/medications";
 import { MAX_MEDICATIONS } from "@/lib/env";
+import { syncGoogleCalendar } from "@/lib/gcal";
 import type { Medication } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
     createdAt: new Date().toISOString(),
   };
   await putMedication(userId, medication);
+  await syncGoogleCalendar(userId);
 
   return NextResponse.json({ medication }, { status: 201 });
 }

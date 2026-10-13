@@ -7,6 +7,7 @@ import {
   putMedication,
 } from "@/lib/repositories/medications";
 import type { Medication } from "@/lib/types";
+import { syncGoogleCalendar } from "@/lib/gcal";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,7 @@ export async function PUT(
     enabled: parsed.data.enabled ?? existing.enabled,
   };
   await putMedication(userId, medication);
+  await syncGoogleCalendar(userId);
 
   return NextResponse.json({ medication });
 }
@@ -52,5 +54,6 @@ export async function DELETE(
 
   const { id } = await params;
   await deleteMedication(userId, id);
+  await syncGoogleCalendar(userId);
   return NextResponse.json({ ok: true });
 }

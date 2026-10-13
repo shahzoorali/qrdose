@@ -33,7 +33,9 @@ export const skTrigger = (iso: string) => `TRIGGER#${iso}`;
 export const skMedication = (medId: string) => `MED#${medId}`;
 /** One dose record per medication per local date. */
 export const skDose = (medId: string, date: string) => `DOSE#${medId}#${date}`;
-export const pkCard = (cardId: string) => `CARD#${cardId}`;
+/** The user's Google Calendar connection (one per user). */
+export const skGoogleCalendar = () => "GCAL";
+export const pkCard =(cardId: string) => `CARD#${cardId}`;
 export const skCard = () => "CARD";
 export const gsi1Email = (email: string) => `EMAIL#${email.toLowerCase()}`;
 // Password-reset code item (one per user, overwritten on re-request).

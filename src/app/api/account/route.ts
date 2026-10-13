@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { currentUserId } from "@/lib/session";
 import { settingsSchema } from "@/lib/validation";
-import { updateUserSettings, getUserByEmail } from "@/lib/repositories/users";
+import {
+  updateUserSettings,
+  getUserByEmail,
+  getUserById,
+} from "@/lib/repositories/users";
+import { syncGoogleCalendar } from "@/lib/gcal";
 import { normalizeUsPhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
@@ -38,6 +43,11 @@ export async function PUT(req: Request) {
     );
   }
 
+  const existingSelf = await getUserById(userId);
   await updateUserSettings(userId, { name, timezone, phone, email, address, city, state, zip });
+  // Event times are pinned to the user's timezone; re-sync if it moved.
+  if (existingSelf && existingSelf.timezone !== timezone) {
+    await syncGoogleCalendar(userId);
+  }
   return NextResponse.json({ ok: true });
 }

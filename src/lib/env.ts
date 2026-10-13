@@ -81,6 +81,15 @@ export const STRIPE_ENABLED = Boolean(
   STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET && STRIPE_PRICE_ID
 );
 
+// ── Google Calendar sync ────────────────────────────────────────────
+// Optional. The "Sync to Google Calendar" option only appears once both are set.
+export const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID || "";
+export const GOOGLE_OAUTH_CLIENT_SECRET =
+  process.env.GOOGLE_OAUTH_CLIENT_SECRET || "";
+export const GOOGLE_CALENDAR_ENABLED = Boolean(
+  GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_CLIENT_SECRET
+);
+
 // ── Password reset (SMS OTP) ────────────────────────────────────────
 export const RESET_CODE_TTL_SECONDS = Number(
   process.env.RESET_CODE_TTL_SECONDS || "900" // 15 minutes

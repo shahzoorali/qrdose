@@ -3,6 +3,7 @@ import { currentUserId } from "@/lib/session";
 import { reminderSettingsSchema } from "@/lib/validation";
 import { getUserById, updateReminderSettings } from "@/lib/repositories/users";
 import { DEFAULT_REMINDER_GRACE_MINUTES } from "@/lib/env";
+import { syncGoogleCalendar } from "@/lib/gcal";
 
 export const runtime = "nodejs";
 
@@ -42,5 +43,9 @@ export async function PUT(req: Request) {
     ...parsed.data,
     enabledAt: turningOn ? new Date().toISOString() : undefined,
   });
+  // The calendar mirrors the master switch, so turning reminders off clears it.
+  if (parsed.data.remindersEnabled !== Boolean(user?.remindersEnabled)) {
+    await syncGoogleCalendar(userId);
+  }
   return NextResponse.json({ ok: true });
 }
